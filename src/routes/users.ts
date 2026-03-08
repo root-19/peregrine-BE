@@ -10,7 +10,7 @@ const createUserSchema = z.object({
   email: z.string().email(),
   role: z.enum(['COO', 'MANAGER', 'EMPLOYEE', 'HR', 'HSE']),
   position: z.string().min(2),
-  department: z.string().optional(),
+  department: z.string().optional().or(z.literal('')),
   phone: z.string().optional(),
   status: z.enum(['active', 'resigned']).default('active'),
   password: z.string().min(6),
@@ -64,6 +64,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     console.log('👤 Creating new user...');
+    console.log('👤 Raw request body:', req.body);
+    
     const validatedData = createUserSchema.parse(req.body);
     console.log('👤 Validated user data:', { ...validatedData, password: '[REDACTED]' });
 
@@ -98,16 +100,24 @@ router.post('/', async (req, res) => {
       data: newUser
     } as ApiResponse<User>);
   } catch (error) {
-    console.error('❌ User creation error:', error);
-    if (error instanceof Error && error.message.includes('Invalid')) {
+    console.error('❌ Error creating user:', error);
+    
+    if (error instanceof z.ZodError) {
+      console.error('❌ Validation errors:', error.issues);
       return res.status(400).json({
         success: false,
-        error: 'Invalid user data provided'
-      } as ApiResponse);
+        message: 'Validation error',
+        errors: error.issues.map((err: any) => ({
+          field: err.path.join('.'),
+          message: err.message
+        }))
+      });
     }
+    
     res.status(500).json({
       success: false,
-      error: 'Internal server error'
+      message: 'Failed to create user',
+      error: error instanceof Error ? error.message : 'Unknown error'
     } as ApiResponse);
   }
 });
