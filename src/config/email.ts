@@ -1,6 +1,31 @@
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
+// Resend HTTP API (works on Railway - bypasses SMTP blocking)
+async function sendViaResend(options: { from: string; to: string; subject: string; html?: string }): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error('RESEND_API_KEY not set');
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: options.from,
+      to: [options.to],
+      subject: options.subject,
+      html: options.html,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Resend API error: ${err}`);
+  }
+}
+
 interface EmailOptions {
   to: string;
   subject: string;
@@ -31,21 +56,25 @@ export class EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<void> {
-    try {
-      const mailOptions = {
-        from: process.env.EMAIL_FROM || process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME!,
-        to: options.to,
-        subject: options.subject,
-        text: options.text,
-        html: options.html,
-      };
+    const from = process.env.EMAIL_FROM || process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME!;
 
-      await this.transporter.sendMail(mailOptions);
-      console.log(`Email sent to ${options.to}`);
+    // Try Resend HTTP API first (works on Railway)
+    if (process.env.RESEND_API_KEY) {
+      try {
+        await sendViaResend({ from, to: options.to, subject: options.subject, html: options.html });
+        console.log(`✅ Email sent via Resend to ${options.to}`);
+        return;
+      } catch (resendError: any) {
+        console.error('Resend failed:', resendError.message);
+      }
+    }
+
+    // Fallback to SMTP nodemailer
+    try {
+      await this.transporter.sendMail({ from, to: options.to, subject: options.subject, text: options.text, html: options.html });
+      console.log(`✅ Email sent via SMTP to ${options.to}`);
     } catch (error) {
       console.error('Email sending failed:', error);
-      // Don't throw error to prevent login flow from breaking
-      // In production, you might want to use a different notification method
       console.warn('Email service unavailable - continuing without email notification');
     }
   }
