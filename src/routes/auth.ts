@@ -130,6 +130,73 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.post('/resend-otp', async (req, res) => {
+  try {
+    const { email, role } = req.body;
+
+    if (!email || !role) {
+      return res.status(400).json({ success: false, error: 'Email and role are required' } as ApiResponse);
+    }
+
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef
+      .where('email', '==', email)
+      .where('role', '==', role)
+      .where('status', '==', UserStatus.ACTIVE)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ success: false, error: 'User not found' } as ApiResponse);
+    }
+
+    const userDoc = snapshot.docs[0];
+    const user = { id: userDoc.id, ...userDoc.data() };
+
+    // Generate new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    console.log(`\n🔄 OTP RESEND:`);
+    console.log(`📧 Email: ${email}`);
+    console.log(`🔑 New OTP Code: ${otp}`);
+
+    // Send email (fire-and-forget)
+    emailService.sendEmail({
+      to: email,
+      subject: `🔐 New Verification Code - Peregrine Construction`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1a5632; color: white; padding: 20px; text-align: center;">
+            <h1>🏗️ Peregrine Construction</h1>
+            <p>New Verification Code</p>
+          </div>
+          <div style="padding: 20px; background: #f0fdf4;">
+            <h2>Hello ${(user as any).name},</h2>
+            <p>Here is your new verification code:</p>
+            <div style="background: white; padding: 15px; border-left: 4px solid #1a5632; margin: 20px 0; text-align: center;">
+              <p style="font-size: 32px; font-weight: bold; color: #1a5632; letter-spacing: 8px;">${otp}</p>
+            </div>
+            <p>This code will expire in 10 minutes.</p>
+          </div>
+          <div style="background: #1a5632; color: white; padding: 15px; text-align: center; font-size: 12px;">
+            <p>&copy; 2024 Peregrine Construction & Management L.L.C INC</p>
+          </div>
+        </div>
+      `
+    }).catch((emailError: any) => {
+      console.error('❌ Failed to send resend OTP email:', emailError.message);
+    });
+
+    res.json({
+      success: true,
+      data: { otp }
+    } as ApiResponse);
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' } as ApiResponse);
+  }
+});
+
 router.post('/register', async (req, res) => {
   try {
     const validatedData = registerSchema.parse(req.body);
