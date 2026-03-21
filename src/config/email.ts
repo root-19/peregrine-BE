@@ -17,10 +17,10 @@ export class EmailService {
         user: process.env.EMAIL_USER!,
         pass: process.env.EMAIL_PASS!,
       },
-      // Force IPv4 and add connection options for production
-      connectionTimeout: 60000,
-      greetingTimeout: 30000,
-      socketTimeout: 60000,
+      // Short timeouts so email failures don't hang
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 5000,
       tls: {
         rejectUnauthorized: false,
       },

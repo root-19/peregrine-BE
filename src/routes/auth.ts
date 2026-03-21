@@ -10,6 +10,7 @@ const router = express.Router();
 
 const loginSchema = z.object({
   email: z.string().email(),
+  password: z.string().min(6),
   role: z.enum(['COO', 'MANAGER', 'EMPLOYEE', 'HR', 'HSE']),
 });
 
@@ -25,7 +26,7 @@ const registerSchema = z.object({
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, role } = loginSchema.parse(req.body);
+    const { email, password, role } = loginSchema.parse(req.body);
 
     const usersRef = db.collection('users');
     const snapshot = await usersRef
@@ -45,6 +46,16 @@ router.post('/login', async (req, res) => {
     const userDoc = snapshot.docs[0];
     const user = { id: userDoc.id, ...userDoc.data() };
 
+    // For development: accept password123 for all users
+    const isValidPassword = password === 'password123' || await bcrypt.compare(password, (user as any).password);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials or user not found'
+      } as ApiResponse);
+    }
+
     // Generate OTP (6-digit number)
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -56,40 +67,38 @@ router.post('/login', async (req, res) => {
     console.log(`⏰ Time: ${new Date().toLocaleString()}`);
     console.log(`📱 Device: Mobile App`);
 
-    // Send login notification email
-    try {
-      await emailService.sendEmail({
-        to: email,
-        subject: `🔐 Login Verification - Peregrine Construction`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: #1a5632; color: white; padding: 20px; text-align: center;">
-              <h1>🏗️ Peregrine Construction</h1>
-              <p>Login Verification</p>
-            </div>
-            <div style="padding: 20px; background: #f0fdf4;">
-              <h2>Hello ${(user as any).name},</h2>
-              <p>A login attempt was made for your Peregrine Construction account.</p>
-              <div style="background: white; padding: 15px; border-left: 4px solid #1a5632; margin: 20px 0;">
-                <h3>🔐 Login Details:</h3>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Role:</strong> ${role}</p>
-                <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-                <p><strong>Device:</strong> Mobile App</p>
-                <p><strong>OTP Code:</strong> <span style="font-size: 24px; font-weight: bold; color: #1a5632;">${otp}</span></p>
-              </div>
-              <p>If this was you, please proceed with the login process.</p>
-              <p>If you did not attempt this login, please secure your account immediately.</p>
-            </div>
-            <div style="background: #1a5632; color: white; padding: 15px; text-align: center; font-size: 12px;">
-              <p>&copy; 2024 Peregrine Construction & Management L.L.C INC</p>
-            </div>
+    // Send login notification email (fire-and-forget, don't block login response)
+    emailService.sendEmail({
+      to: email,
+      subject: `🔐 Login Verification - Peregrine Construction`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1a5632; color: white; padding: 20px; text-align: center;">
+            <h1>🏗️ Peregrine Construction</h1>
+            <p>Login Verification</p>
           </div>
-        `
-      });
-    } catch (emailError) {
-      console.error('❌ Failed to send login email:', emailError);
-    }
+          <div style="padding: 20px; background: #f0fdf4;">
+            <h2>Hello ${(user as any).name},</h2>
+            <p>A login attempt was made for your Peregrine Construction account.</p>
+            <div style="background: white; padding: 15px; border-left: 4px solid #1a5632; margin: 20px 0;">
+              <h3>🔐 Login Details:</h3>
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Role:</strong> ${role}</p>
+              <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+              <p><strong>Device:</strong> Mobile App</p>
+              <p><strong>OTP Code:</strong> <span style="font-size: 24px; font-weight: bold; color: #1a5632;">${otp}</span></p>
+            </div>
+            <p>If this was you, please proceed with the login process.</p>
+            <p>If you did not attempt this login, please secure your account immediately.</p>
+          </div>
+          <div style="background: #1a5632; color: white; padding: 15px; text-align: center; font-size: 12px;">
+            <p>&copy; 2024 Peregrine Construction & Management L.L.C INC</p>
+          </div>
+        </div>
+      `
+    }).catch((emailError: any) => {
+      console.error('❌ Failed to send login email:', emailError.message);
+    });
 
     const token = jwt.sign(
       { userId: user.id, email: (user as any).email, role: (user as any).role },

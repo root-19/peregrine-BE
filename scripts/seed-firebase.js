@@ -51,14 +51,14 @@ async function seed() {
   // ========== USERS ==========
   console.log('--- Seeding Users ---');
   const users = [
-    { email: 'wasieacuna@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'John Smith', role: 'COO', status: 'active', department: 'Executive', position: 'Chief Operating Officer', hireDate: '2020-01-15', phone: '+1234567890' },
-    { email: 'manager@peregrine.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Sarah Johnson', role: 'MANAGER', status: 'active', department: 'Operations', position: 'Project Manager', hireDate: '2021-03-20', phone: '+1234567891' },
-    { email: 'employee@peregrine.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Mike Wilson', role: 'EMPLOYEE', status: 'active', department: 'Construction', position: 'Site Supervisor', hireDate: '2022-06-10', phone: '+1234567892' },
-    { email: 'hr@peregrine.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Emily Davis', role: 'HR', status: 'active', department: 'Human Resources', position: 'HR Manager', hireDate: '2020-05-12', phone: '+1234567893' },
-    { email: 'hse@peregrine.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Robert Brown', role: 'HSE', status: 'active', department: 'Safety', position: 'HSE Officer', hireDate: '2021-08-25', phone: '+1234567894' },
-    { email: 'foreman@peregrine.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'James Garcia', role: 'EMPLOYEE', status: 'active', department: 'Construction', position: 'Foreman', hireDate: '2022-02-14', phone: '+1234567895' },
-    { email: 'engineer@peregrine.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Lisa Martinez', role: 'EMPLOYEE', status: 'active', department: 'Engineering', position: 'Site Engineer', hireDate: '2021-11-30', phone: '+1234567896' },
-    { email: 'supervisor@peregrine.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'David Lee', role: 'MANAGER', status: 'active', department: 'Operations', position: 'Site Supervisor', hireDate: '2020-09-18', phone: '+1234567897' },
+    { email: 'wasieacuna@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'John Smith', role: 'COO', status: 'active', department: 'Executive', position: 'Chief Operating Officer', hireDate: '2020-01-15', phone: '+1234567890' },
+    { email: 'manager@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Sarah Johnson', role: 'MANAGER', status: 'active', department: 'Operations', position: 'Project Manager', hireDate: '2021-03-20', phone: '+1234567891' },
+    { email: 'employee@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Mike Wilson', role: 'EMPLOYEE', status: 'active', department: 'Construction', position: 'Site Supervisor', hireDate: '2022-06-10', phone: '+1234567892' },
+    { email: 'hr@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Emily Davis', role: 'HR', status: 'active', department: 'Human Resources', position: 'HR Manager', hireDate: '2020-05-12', phone: '+1234567893' },
+    { email: 'hse@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Robert Brown', role: 'HSE', status: 'active', department: 'Safety', position: 'HSE Officer', hireDate: '2021-08-25', phone: '+1234567894' },
+    { email: 'foreman@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'James Garcia', role: 'EMPLOYEE', status: 'active', department: 'Construction', position: 'Foreman', hireDate: '2022-02-14', phone: '+1234567895' },
+    { email: 'engineer@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Lisa Martinez', role: 'EMPLOYEE', status: 'active', department: 'Engineering', position: 'Site Engineer', hireDate: '2021-11-30', phone: '+1234567896' },
+    { email: 'supervisor@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'David Lee', role: 'MANAGER', status: 'active', department: 'Operations', position: 'Site Supervisor', hireDate: '2020-09-18', phone: '+1234567897' },
   ];
 
   const userIds = {};
@@ -85,8 +85,8 @@ async function seed() {
       budget: 5000000,
       location: 'Downtown District',
       client: 'ABC Development Corp',
-      managerId: userIds['manager@peregrine.com'] || '',
-      teamMembers: [userIds['employee@peregrine.com'], userIds['foreman@peregrine.com'], userIds['engineer@peregrine.com']].filter(Boolean),
+      managerId: userIds['manager@gmail.com'] || '',
+      teamMembers: [userIds['employee@gmail.com'], userIds['foreman@gmail.com'], userIds['engineer@gmail.com']].filter(Boolean),
     },
     {
       name: 'Highway Bridge Project',
@@ -97,8 +97,8 @@ async function seed() {
       budget: 3500000,
       location: 'North-South Corridor',
       client: 'Department of Transportation',
-      managerId: userIds['supervisor@peregrine.com'] || '',
-      teamMembers: [userIds['foreman@peregrine.com'], userIds['engineer@peregrine.com']].filter(Boolean),
+      managerId: userIds['supervisor@gmail.com'] || '',
+      teamMembers: [userIds['foreman@gmail.com'], userIds['engineer@gmail.com']].filter(Boolean),
     },
     {
       name: 'Industrial Complex',
@@ -109,8 +109,8 @@ async function seed() {
       budget: 2800000,
       location: 'Industrial Zone',
       client: 'Logistics Solutions Inc',
-      managerId: userIds['manager@peregrine.com'] || '',
-      teamMembers: [userIds['employee@peregrine.com']].filter(Boolean),
+      managerId: userIds['manager@gmail.com'] || '',
+      teamMembers: [userIds['employee@gmail.com']].filter(Boolean),
     },
     {
       name: 'Residential Complex',
@@ -121,8 +121,8 @@ async function seed() {
       budget: 4200000,
       location: 'Suburban Area',
       client: 'Home Builders LLC',
-      managerId: userIds['supervisor@peregrine.com'] || '',
-      teamMembers: [userIds['foreman@peregrine.com']].filter(Boolean),
+      managerId: userIds['supervisor@gmail.com'] || '',
+      teamMembers: [userIds['foreman@gmail.com']].filter(Boolean),
     },
   ];
 
@@ -138,8 +138,8 @@ async function seed() {
       description: 'Worker slipped and fell from 10-foot scaffold while installing framing',
       severity: 'high',
       status: 'investigating',
-      reportedBy: userIds['employee@peregrine.com'] || '',
-      assignedTo: userIds['hse@peregrine.com'] || '',
+      reportedBy: userIds['employee@gmail.com'] || '',
+      assignedTo: userIds['hse@gmail.com'] || '',
       location: 'Skyline Tower - Floor 5',
       dateOccurred: '2024-02-10',
       category: 'Safety Accident',
@@ -151,8 +151,8 @@ async function seed() {
       description: 'Excavator hydraulic system failed during foundation work',
       severity: 'medium',
       status: 'resolved',
-      reportedBy: userIds['foreman@peregrine.com'] || '',
-      assignedTo: userIds['manager@peregrine.com'] || '',
+      reportedBy: userIds['foreman@gmail.com'] || '',
+      assignedTo: userIds['manager@gmail.com'] || '',
       location: 'Highway Bridge - Site A',
       dateOccurred: '2024-02-08',
       category: 'Equipment Failure',
@@ -164,8 +164,8 @@ async function seed() {
       description: 'Steel delivery delayed by 3 days affecting project timeline',
       severity: 'low',
       status: 'open',
-      reportedBy: userIds['manager@peregrine.com'] || '',
-      assignedTo: userIds['manager@peregrine.com'] || '',
+      reportedBy: userIds['manager@gmail.com'] || '',
+      assignedTo: userIds['manager@gmail.com'] || '',
       location: 'Skyline Tower - Storage',
       dateOccurred: '2024-02-12',
       category: 'Logistics',
@@ -177,8 +177,8 @@ async function seed() {
       description: 'Crane load nearly struck workers due to high winds',
       severity: 'critical',
       status: 'investigating',
-      reportedBy: userIds['engineer@peregrine.com'] || '',
-      assignedTo: userIds['hse@peregrine.com'] || '',
+      reportedBy: userIds['engineer@gmail.com'] || '',
+      assignedTo: userIds['hse@gmail.com'] || '',
       location: 'Industrial Complex - Building 3',
       dateOccurred: '2024-02-09',
       category: 'Safety Incident',
@@ -195,13 +195,13 @@ async function seed() {
   console.log('\n--- Seeding Employees ---');
   const employees = [
     { employee_id: 'EMP24001', user_id: userIds['wasieacuna@gmail.com'] || '', first_name: 'John', last_name: 'Smith', email: 'wasieacuna@gmail.com', phone: '+1234567890', department: 'Executive', position: 'Chief Operating Officer', role: 'COO', hire_date: '2020-01-15', employee_type: 'regular', status: 'active', salary: 150000, work_schedule: 'regular', work_days: 'Monday-Friday', work_hours: '8:00-17:00', sss_number: '12-3456789-0', philhealth_number: '12-3456789-1', pagibig_number: '12-3456789-2', tin_number: '123-456-789', emergency_contact_name: 'Mary Smith', emergency_contact_phone: '+1234567891', emergency_contact_relationship: 'Spouse', requirements_completed: true },
-    { employee_id: 'EMP24002', user_id: userIds['manager@peregrine.com'] || '', first_name: 'Sarah', last_name: 'Johnson', email: 'manager@peregrine.com', phone: '+1234567891', department: 'Operations', position: 'Project Manager', role: 'MANAGER', hire_date: '2021-03-20', employee_type: 'regular', status: 'active', salary: 85000, work_schedule: 'regular', work_days: 'Monday-Friday', work_hours: '8:00-17:00', sss_number: '12-3456789-3', philhealth_number: '12-3456789-4', pagibig_number: '12-3456789-5', tin_number: '123-456-790', emergency_contact_name: 'Michael Johnson', emergency_contact_phone: '+1234567892', emergency_contact_relationship: 'Father', requirements_completed: true },
-    { employee_id: 'EMP24003', user_id: userIds['employee@peregrine.com'] || '', first_name: 'Mike', last_name: 'Wilson', email: 'employee@peregrine.com', phone: '+1234567892', department: 'Construction', position: 'Site Supervisor', role: 'EMPLOYEE', hire_date: '2022-06-10', employee_type: 'regular', status: 'active', salary: 45000, work_schedule: 'regular', work_days: 'Monday-Saturday', work_hours: '7:00-16:00', sss_number: '12-3456789-6', philhealth_number: '12-3456789-7', pagibig_number: '12-3456789-8', tin_number: '123-456-791', emergency_contact_name: 'Linda Wilson', emergency_contact_phone: '+1234567893', emergency_contact_relationship: 'Mother', requirements_completed: true },
-    { employee_id: 'EMP24004', user_id: userIds['hr@peregrine.com'] || '', first_name: 'Emily', last_name: 'Davis', email: 'hr@peregrine.com', phone: '+1234567893', department: 'Human Resources', position: 'HR Manager', role: 'HR', hire_date: '2020-05-12', employee_type: 'regular', status: 'active', salary: 75000, work_schedule: 'regular', work_days: 'Monday-Friday', work_hours: '8:30-17:30', sss_number: '12-3456789-9', philhealth_number: '12-3456789-0', pagibig_number: '12-3456789-1', tin_number: '123-456-792', emergency_contact_name: 'Robert Davis', emergency_contact_phone: '+1234567894', emergency_contact_relationship: 'Father', requirements_completed: true },
-    { employee_id: 'EMP24005', user_id: userIds['hse@peregrine.com'] || '', first_name: 'Robert', last_name: 'Brown', email: 'hse@peregrine.com', phone: '+1234567894', department: 'Safety', position: 'HSE Officer', role: 'HSE', hire_date: '2021-08-25', employee_type: 'regular', status: 'active', salary: 55000, work_schedule: 'flexible', work_days: 'Monday-Friday', work_hours: '8:00-17:00', sss_number: '12-3456789-2', philhealth_number: '12-3456789-3', pagibig_number: '12-3456789-4', tin_number: '123-456-793', emergency_contact_name: 'Susan Brown', emergency_contact_phone: '+1234567895', emergency_contact_relationship: 'Wife', requirements_completed: true },
-    { employee_id: 'EMP24006', user_id: userIds['foreman@peregrine.com'] || '', first_name: 'James', last_name: 'Garcia', email: 'foreman@peregrine.com', phone: '+1234567895', department: 'Construction', position: 'Foreman', role: 'EMPLOYEE', hire_date: '2022-02-14', employee_type: 'regular', status: 'active', salary: 42000, work_schedule: 'night_shift', work_days: 'Monday-Saturday', work_hours: '20:00-4:00', sss_number: '12-3456789-5', philhealth_number: '12-3456789-6', pagibig_number: '12-3456789-7', tin_number: '123-456-794', emergency_contact_name: 'Maria Garcia', emergency_contact_phone: '+1234567896', emergency_contact_relationship: 'Spouse', requirements_completed: true },
-    { employee_id: 'EMP24007', user_id: userIds['engineer@peregrine.com'] || '', first_name: 'Lisa', last_name: 'Martinez', email: 'engineer@peregrine.com', phone: '+1234567896', department: 'Engineering', position: 'Site Engineer', role: 'EMPLOYEE', hire_date: '2021-11-30', employee_type: 'regular', status: 'active', salary: 65000, work_schedule: 'regular', work_days: 'Monday-Friday', work_hours: '8:00-17:00', sss_number: '12-3456789-8', philhealth_number: '12-3456789-9', pagibig_number: '12-3456789-0', tin_number: '123-456-795', emergency_contact_name: 'Carlos Martinez', emergency_contact_phone: '+1234567897', emergency_contact_relationship: 'Father', requirements_completed: true },
-    { employee_id: 'EMP24008', user_id: userIds['supervisor@peregrine.com'] || '', first_name: 'David', last_name: 'Lee', email: 'supervisor@peregrine.com', phone: '+1234567897', department: 'Operations', position: 'Site Supervisor', role: 'MANAGER', hire_date: '2020-09-18', employee_type: 'regular', status: 'active', salary: 70000, work_schedule: 'regular', work_days: 'Monday-Friday', work_hours: '8:00-17:00', sss_number: '12-3456789-1', philhealth_number: '12-3456789-2', pagibig_number: '12-3456789-3', tin_number: '123-456-796', emergency_contact_name: 'Jennifer Lee', emergency_contact_phone: '+1234567898', emergency_contact_relationship: 'Wife', requirements_completed: true },
+    { employee_id: 'EMP24002', user_id: userIds['manager@gmail.com'] || '', first_name: 'Sarah', last_name: 'Johnson', email: 'manager@gmail.com', phone: '+1234567891', department: 'Operations', position: 'Project Manager', role: 'MANAGER', hire_date: '2021-03-20', employee_type: 'regular', status: 'active', salary: 85000, work_schedule: 'regular', work_days: 'Monday-Friday', work_hours: '8:00-17:00', sss_number: '12-3456789-3', philhealth_number: '12-3456789-4', pagibig_number: '12-3456789-5', tin_number: '123-456-790', emergency_contact_name: 'Michael Johnson', emergency_contact_phone: '+1234567892', emergency_contact_relationship: 'Father', requirements_completed: true },
+    { employee_id: 'EMP24003', user_id: userIds['employee@gmail.com'] || '', first_name: 'Mike', last_name: 'Wilson', email: 'employee@gmail.com', phone: '+1234567892', department: 'Construction', position: 'Site Supervisor', role: 'EMPLOYEE', hire_date: '2022-06-10', employee_type: 'regular', status: 'active', salary: 45000, work_schedule: 'regular', work_days: 'Monday-Saturday', work_hours: '7:00-16:00', sss_number: '12-3456789-6', philhealth_number: '12-3456789-7', pagibig_number: '12-3456789-8', tin_number: '123-456-791', emergency_contact_name: 'Linda Wilson', emergency_contact_phone: '+1234567893', emergency_contact_relationship: 'Mother', requirements_completed: true },
+    { employee_id: 'EMP24004', user_id: userIds['hr@gmail.com'] || '', first_name: 'Emily', last_name: 'Davis', email: 'hr@gmail.com', phone: '+1234567893', department: 'Human Resources', position: 'HR Manager', role: 'HR', hire_date: '2020-05-12', employee_type: 'regular', status: 'active', salary: 75000, work_schedule: 'regular', work_days: 'Monday-Friday', work_hours: '8:30-17:30', sss_number: '12-3456789-9', philhealth_number: '12-3456789-0', pagibig_number: '12-3456789-1', tin_number: '123-456-792', emergency_contact_name: 'Robert Davis', emergency_contact_phone: '+1234567894', emergency_contact_relationship: 'Father', requirements_completed: true },
+    { employee_id: 'EMP24005', user_id: userIds['hse@gmail.com'] || '', first_name: 'Robert', last_name: 'Brown', email: 'hse@gmail.com', phone: '+1234567894', department: 'Safety', position: 'HSE Officer', role: 'HSE', hire_date: '2021-08-25', employee_type: 'regular', status: 'active', salary: 55000, work_schedule: 'flexible', work_days: 'Monday-Friday', work_hours: '8:00-17:00', sss_number: '12-3456789-2', philhealth_number: '12-3456789-3', pagibig_number: '12-3456789-4', tin_number: '123-456-793', emergency_contact_name: 'Susan Brown', emergency_contact_phone: '+1234567895', emergency_contact_relationship: 'Wife', requirements_completed: true },
+    { employee_id: 'EMP24006', user_id: userIds['foreman@gmail.com'] || '', first_name: 'James', last_name: 'Garcia', email: 'foreman@gmail.com', phone: '+1234567895', department: 'Construction', position: 'Foreman', role: 'EMPLOYEE', hire_date: '2022-02-14', employee_type: 'regular', status: 'active', salary: 42000, work_schedule: 'night_shift', work_days: 'Monday-Saturday', work_hours: '20:00-4:00', sss_number: '12-3456789-5', philhealth_number: '12-3456789-6', pagibig_number: '12-3456789-7', tin_number: '123-456-794', emergency_contact_name: 'Maria Garcia', emergency_contact_phone: '+1234567896', emergency_contact_relationship: 'Spouse', requirements_completed: true },
+    { employee_id: 'EMP24007', user_id: userIds['engineer@gmail.com'] || '', first_name: 'Lisa', last_name: 'Martinez', email: 'engineer@gmail.com', phone: '+1234567896', department: 'Engineering', position: 'Site Engineer', role: 'EMPLOYEE', hire_date: '2021-11-30', employee_type: 'regular', status: 'active', salary: 65000, work_schedule: 'regular', work_days: 'Monday-Friday', work_hours: '8:00-17:00', sss_number: '12-3456789-8', philhealth_number: '12-3456789-9', pagibig_number: '12-3456789-0', tin_number: '123-456-795', emergency_contact_name: 'Carlos Martinez', emergency_contact_phone: '+1234567897', emergency_contact_relationship: 'Father', requirements_completed: true },
+    { employee_id: 'EMP24008', user_id: userIds['supervisor@gmail.com'] || '', first_name: 'David', last_name: 'Lee', email: 'supervisor@gmail.com', phone: '+1234567897', department: 'Operations', position: 'Site Supervisor', role: 'MANAGER', hire_date: '2020-09-18', employee_type: 'regular', status: 'active', salary: 70000, work_schedule: 'regular', work_days: 'Monday-Friday', work_hours: '8:00-17:00', sss_number: '12-3456789-1', philhealth_number: '12-3456789-2', pagibig_number: '12-3456789-3', tin_number: '123-456-796', emergency_contact_name: 'Jennifer Lee', emergency_contact_phone: '+1234567898', emergency_contact_relationship: 'Wife', requirements_completed: true },
   ];
 
   for (const e of employees) {

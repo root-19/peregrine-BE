@@ -23,14 +23,14 @@ async function seedDatabase() {
       .insert([
         {
           email: 'wasieacuna@gmail.com',
-          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQ',
+          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQ',
           name: 'John Smith',
           role: 'COO',
           status: 'active'
         },
         {
-          email: 'manager@peregrine.com',
-          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQ',
+          email: 'manager@gmail.com',
+          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQ',
           name: 'Sarah Johnson',
           role: 'MANAGER',
           status: 'active',
@@ -40,8 +40,8 @@ async function seedDatabase() {
           phone: '+1234567891'
         },
         {
-          email: 'employee@peregrine.com',
-          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQ',
+          email: 'employee@gmail.com',
+          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQ',
           name: 'Mike Wilson',
           role: 'EMPLOYEE',
           status: 'active',
@@ -51,8 +51,8 @@ async function seedDatabase() {
           phone: '+1234567892'
         },
         {
-          email: 'hr@peregrine.com',
-          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQ',
+          email: 'hr@gmail.com',
+          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQ',
           name: 'Emily Davis',
           role: 'HR',
           status: 'active',
@@ -62,8 +62,8 @@ async function seedDatabase() {
           phone: '+1234567893'
         },
         {
-          email: 'hse@peregrine.com',
-          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQ',
+          email: 'hse@gmail.com',
+          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQ',
           name: 'Robert Brown',
           role: 'HSE',
           status: 'active',
@@ -73,7 +73,7 @@ async function seedDatabase() {
           phone: '+1234567894'
         },
         {
-          email: 'foreman@peregrine.com',
+          email: 'foreman@gmail.com',
           password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQ',
           name: 'James Garcia',
           role: 'EMPLOYEE',
@@ -84,8 +84,8 @@ async function seedDatabase() {
           phone: '+1234567895'
         },
         {
-          email: 'engineer@peregrine.com',
-          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQ',
+          email: 'engineer@gmail.com',
+          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQ',
           name: 'Lisa Martinez',
           role: 'EMPLOYEE',
           status: 'active',
@@ -95,8 +95,8 @@ async function seedDatabase() {
           phone: '+1234567896'
         },
         {
-          email: 'supervisor@peregrine.com',
-          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQ',
+          email: 'supervisor@gmail.com',
+          password: '$2a$10$rOzJqQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQ',
           name: 'David Lee',
           role: 'MANAGER',
           status: 'active',
@@ -248,13 +248,13 @@ async function seedDatabase() {
     console.log(`- Incidents: ${incidents.length}`);
     console.log('\n🔑 Login Credentials:');
     console.log(`- Email: wasieacuna@gmail.com (COO)`);
-    console.log(`- Email: manager@peregrine.com (Manager)`);
-    console.log(`- Email: employee@peregrine.com (Employee)`);
-    console.log(`- Email: hr@peregrine.com (HR)`);
-    console.log(`- Email: hse@peregrine.com (HSE)`);
-    console.log(`- Email: foreman@peregrine.com (Employee)`);
-    console.log(`- Email: engineer@peregrine.com (Employee)`);
-    console.log(`- Email: supervisor@peregrine.com (Manager)`);
+    console.log(`- Email: manager@gmail.com (Manager)`);
+    console.log(`- Email: employee@gmail.com (Employee)`);
+    console.log(`- Email: hr@gmail.com (HR)`);
+    console.log(`- Email: hse@gmail.com (HSE)`);
+    console.log(`- Email: foreman@gmail.com (Employee)`);
+    console.log(`- Email: engineer@gmail.com (Employee)`);
+    console.log(`- Email: supervisor@gmail.com (Manager)`);
     console.log('\n🔐 Password for all users: password123');
 
   } catch (error) {
