@@ -15,6 +15,7 @@ import messageRoutes from './routes/messages';
 import analyticsRoutes from './routes/analytics';
 import uploadRoutes from './routes/upload';
 import materialRequestRoutes from './routes/materialRequests';
+import activityLogRoutes from './routes/activityLogs';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -59,6 +60,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/materials', materialRequestRoutes);
+app.use('/api/activity-logs', activityLogRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
