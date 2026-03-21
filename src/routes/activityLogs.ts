@@ -10,10 +10,11 @@ router.get('/project/:projectId', async (req, res) => {
     const { projectId } = req.params;
     const snapshot = await db.collection('activityLogs')
       .where('projectId', '==', projectId)
-      .orderBy('createdAt', 'desc')
       .limit(100)
       .get();
-    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const logs = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     res.json({ success: true, data: logs } as ApiResponse<any[]>);
   } catch (error) {
     console.error('Get activity logs error:', error);
