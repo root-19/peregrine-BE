@@ -52,13 +52,14 @@ async function seed() {
   console.log('--- Seeding Users ---');
   const users = [
     { email: 'wasieacuna@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'John Smith', role: 'COO', status: 'active', department: 'Executive', position: 'Chief Operating Officer', hireDate: '2020-01-15', phone: '+1234567890' },
-    { email: 'manager@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Sarah Johnson', role: 'MANAGER', status: 'active', department: 'Operations', position: 'Project Manager', hireDate: '2021-03-20', phone: '+1234567891' },
-    { email: 'employee@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Mike Wilson', role: 'EMPLOYEE', status: 'active', department: 'Construction', position: 'Site Supervisor', hireDate: '2022-06-10', phone: '+1234567892' },
-    { email: 'hr@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Emily Davis', role: 'HR', status: 'active', department: 'Human Resources', position: 'HR Manager', hireDate: '2020-05-12', phone: '+1234567893' },
-    { email: 'hse@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Robert Brown', role: 'HSE', status: 'active', department: 'Safety', position: 'HSE Officer', hireDate: '2021-08-25', phone: '+1234567894' },
-    { email: 'foreman@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'James Garcia', role: 'EMPLOYEE', status: 'active', department: 'Construction', position: 'Foreman', hireDate: '2022-02-14', phone: '+1234567895' },
-    { email: 'engineer@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Lisa Martinez', role: 'EMPLOYEE', status: 'active', department: 'Engineering', position: 'Site Engineer', hireDate: '2021-11-30', phone: '+1234567896' },
-    { email: 'supervisor@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'David Lee', role: 'MANAGER', status: 'active', department: 'Operations', position: 'Site Supervisor', hireDate: '2020-09-18', phone: '+1234567897' },
+    { email: 'manager@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Sarah Johnson', role: 'MANAGER', status: 'active', department: 'Operations', position: 'Project Manager', hireDate: '2021-03-20', phone: '+1234567891' },
+    { email: 'employee@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Mike Wilson', role: 'EMPLOYEE', status: 'active', department: 'Construction', position: 'Site Supervisor', hireDate: '2022-06-10', phone: '+1234567892' },
+    { email: 'hr@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Emily Davis', role: 'HR', status: 'active', department: 'Human Resources', position: 'HR Manager', hireDate: '2020-05-12', phone: '+1234567893' },
+    { email: 'hse@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Robert Brown', role: 'HSE', status: 'active', department: 'Safety', position: 'HSE Officer', hireDate: '2021-08-25', phone: '+1234567894' },
+    { email: 'foreman@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'James Garcia', role: 'EMPLOYEE', status: 'active', department: 'Construction', position: 'Foreman', hireDate: '2022-02-14', phone: '+1234567895' },
+    { email: 'engineer@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Lisa Martinez', role: 'EMPLOYEE', status: 'active', department: 'Engineering', position: 'Site Engineer', hireDate: '2021-11-30', phone: '+1234567896' },
+    { email: 'supervisor@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'David Lee', role: 'MANAGER', status: 'active', department: 'Operations', position: 'Site Supervisor', hireDate: '2020-09-18', phone: '+1234567897' },
+    { email: 'dmp@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'DMP Site Manager', role: 'SITE_MANAGER', status: 'active', department: 'Site Management', position: 'Site Manager', hireDate: '2023-01-10', phone: '+1234567898' },
   ];
 
   const userIds = {};
