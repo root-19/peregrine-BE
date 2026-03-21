@@ -26,7 +26,7 @@ router.post('/requests', async (req, res) => {
     // Create material request in Firestore
     const materialRequest = {
       ...validatedData,
-      status: 'pending',
+      status: 'submitted',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
