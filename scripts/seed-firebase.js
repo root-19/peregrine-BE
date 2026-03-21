@@ -59,7 +59,7 @@ async function seed() {
     { email: 'foreman@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'James Garcia', role: 'EMPLOYEE', status: 'active', department: 'Construction', position: 'Foreman', hireDate: '2022-02-14', phone: '+1234567895' },
     { email: 'engineer@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'Lisa Martinez', role: 'EMPLOYEE', status: 'active', department: 'Engineering', position: 'Site Engineer', hireDate: '2021-11-30', phone: '+1234567896' },
     { email: 'supervisor@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'David Lee', role: 'MANAGER', status: 'active', department: 'Operations', position: 'Site Supervisor', hireDate: '2020-09-18', phone: '+1234567897' },
-    { email: 'dmp@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'DMP Site Manager', role: 'SITE_MANAGER', status: 'active', department: 'Site Management', position: 'Site Manager', hireDate: '2023-01-10', phone: '+1234567898' },
+    { email: 'dmp@gmail.com', password: '$2a$10$rOzJqQjQjQjQjQjQjQjQjOzJqQjQjQjQjQjQjQjQjQjQjQjQjQjQjQ', name: 'DMP Site Manager', role: 'EMPLOYEE', status: 'active', department: 'Site Management', position: 'Site Manager', hireDate: '2023-01-10', phone: '+1234567898' },
   ];
 
   const userIds = {};
