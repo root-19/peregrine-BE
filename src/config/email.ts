@@ -13,13 +13,13 @@ export class EmailService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      host: process.env.MAIL_HOST || 'smtp.gmail.com',
+      port: Number(process.env.MAIL_PORT) || 587,
+      secure: false, // use STARTTLS on port 587
       family: 4, // Force IPv4 to avoid ENETUNREACH on IPv6
       auth: {
-        user: process.env.EMAIL_USER!,
-        pass: process.env.EMAIL_PASS!,
+        user: process.env.MAIL_USERNAME || process.env.EMAIL_USER!,
+        pass: process.env.MAIL_PASSWORD || process.env.EMAIL_PASS!,
       },
       connectionTimeout: 10000,
       greetingTimeout: 10000,
@@ -33,7 +33,7 @@ export class EmailService {
   async sendEmail(options: EmailOptions): Promise<void> {
     try {
       const mailOptions = {
-        from: process.env.EMAIL_FROM || process.env.EMAIL_USER!,
+        from: process.env.EMAIL_FROM || process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME!,
         to: options.to,
         subject: options.subject,
         text: options.text,
