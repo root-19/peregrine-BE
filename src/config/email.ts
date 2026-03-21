@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 interface EmailOptions {
   to: string;
@@ -12,23 +13,21 @@ export class EmailService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      family: 4, // Force IPv4 to avoid ENETUNREACH on IPv6
       auth: {
         user: process.env.EMAIL_USER!,
         pass: process.env.EMAIL_PASS!,
       },
-      // Short timeouts so email failures don't hang
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 5000,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
       tls: {
         rejectUnauthorized: false,
       },
-      // Add pool configuration for better reliability
-      pool: true,
-      maxConnections: 5,
-      maxMessages: 100,
-    });
+    } as SMTPTransport.Options);
   }
 
   async sendEmail(options: EmailOptions): Promise<void> {
