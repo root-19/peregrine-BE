@@ -27,11 +27,14 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 // Trust proxy for rate limiting when behind reverse proxy
 app.set('trust proxy', 1);
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP, please try again later.',
-});
+// Temporarily disable rate limiter for development
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 500, // Increased from 100 to 500 requests per window
+//   message: 'Too many requests from this IP, please try again later.',
+//   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+//   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+// });
 
 app.use(helmet());
 app.use(cors({
@@ -40,7 +43,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
-app.use(limiter);
+// app.use(limiter); // Temporarily disabled for development
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));

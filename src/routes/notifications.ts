@@ -8,16 +8,20 @@ const router = express.Router();
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
+    const limit = parseInt(req.query.limit as string) || 50; // Default to 50 notifications
+    
+    console.log(`📬 Fetching notifications for user: ${userId}, limit: ${limit}`);
     
     const snapshot = await db
       .collection('notifications')
       .where('recipientId', '==', userId)
-      .limit(100)
+      .orderBy('createdAt', 'desc')
+      .limit(limit)
       .get();
     
-    const notifications = snapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    console.log(`✅ Retrieved ${notifications.length} notifications for user ${userId}`);
     
     res.json({
       success: true,
