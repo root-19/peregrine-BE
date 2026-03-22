@@ -4,43 +4,59 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
-// Get all notifications for a user
+// Get all notifications for a user (by recipientId AND recipientRole)
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
+    const role = req.query.role as string;
     const limit = parseInt(req.query.limit as string) || 50;
     
-    console.log(`📬 Fetching notifications for user: ${userId}, limit: ${limit}`);
+    console.log(`📬 Fetching notifications for user: ${userId}, role: ${role || 'none'}, limit: ${limit}`);
     
-    let notifications: any[] = [];
+    // Query 1: notifications directly targeted at this user by ID
+    const byIdSnapshot = await db
+      .collection('notifications')
+      .where('recipientId', '==', userId)
+      .get();
     
-    try {
-      // Try with orderBy (requires composite index)
-      const snapshot = await db
+    const byIdNotifications = byIdSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log(`📋 Found ${byIdNotifications.length} notifications by recipientId`);
+    
+    // Query 2: notifications targeted at this user's role (if role provided)
+    let byRoleNotifications: any[] = [];
+    if (role) {
+      const byRoleSnapshot = await db
         .collection('notifications')
-        .where('recipientId', '==', userId)
-        .orderBy('createdAt', 'desc')
-        .limit(limit)
+        .where('recipientRole', '==', role)
         .get();
-      notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (indexError: any) {
-      // Fallback: query without orderBy, sort in JS
-      console.warn('⚠️ Composite index missing, using fallback query:', indexError.message);
-      const snapshot = await db
-        .collection('notifications')
-        .where('recipientId', '==', userId)
-        .get();
-      notifications = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .sort((a: any, b: any) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-        })
-        .slice(0, limit);
+      byRoleNotifications = byRoleSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log(`📋 Found ${byRoleNotifications.length} notifications by recipientRole: ${role}`);
     }
     
-    console.log(`✅ Retrieved ${notifications.length} notifications for user ${userId}`);
+    // Query 3: notifications for ALL_USERS
+    const allUsersSnapshot = await db
+      .collection('notifications')
+      .where('recipientRole', '==', 'ALL_USERS')
+      .get();
+    const allUsersNotifications = allUsersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log(`📋 Found ${allUsersNotifications.length} notifications for ALL_USERS`);
+    
+    // Merge and deduplicate by ID
+    const allNotificationsMap = new Map<string, any>();
+    [...byIdNotifications, ...byRoleNotifications, ...allUsersNotifications].forEach(n => {
+      allNotificationsMap.set(n.id, n);
+    });
+    
+    // Sort by createdAt descending and apply limit
+    const notifications = Array.from(allNotificationsMap.values())
+      .sort((a: any, b: any) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      })
+      .slice(0, limit);
+    
+    console.log(`✅ Retrieved ${notifications.length} total notifications for user ${userId}`);
     
     res.json({
       success: true,
