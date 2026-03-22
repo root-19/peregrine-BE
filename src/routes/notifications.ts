@@ -8,18 +8,37 @@ const router = express.Router();
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const limit = parseInt(req.query.limit as string) || 50; // Default to 50 notifications
+    const limit = parseInt(req.query.limit as string) || 50;
     
     console.log(`📬 Fetching notifications for user: ${userId}, limit: ${limit}`);
     
-    const snapshot = await db
-      .collection('notifications')
-      .where('recipientId', '==', userId)
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-      .get();
+    let notifications: any[] = [];
     
-    const notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      // Try with orderBy (requires composite index)
+      const snapshot = await db
+        .collection('notifications')
+        .where('recipientId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .limit(limit)
+        .get();
+      notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (indexError: any) {
+      // Fallback: query without orderBy, sort in JS
+      console.warn('⚠️ Composite index missing, using fallback query:', indexError.message);
+      const snapshot = await db
+        .collection('notifications')
+        .where('recipientId', '==', userId)
+        .get();
+      notifications = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a: any, b: any) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        })
+        .slice(0, limit);
+    }
     
     console.log(`✅ Retrieved ${notifications.length} notifications for user ${userId}`);
     
