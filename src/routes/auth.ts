@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { db } from '../config/supabase';
 import { UserRole, UserStatus, ApiResponse } from '../types';
-import { emailService } from '../config/email';
+import rateLimit from 'express-rate-limit';
+import { mailsService } from '../config/email';
 
 const router = express.Router();
 

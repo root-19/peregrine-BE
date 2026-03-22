@@ -1,52 +1,57 @@
-import nodemailer from "nodemailer";
+import fetch from 'node-fetch';
 
-interface EmailOptions {
+interface SendEmailOptions {
   to: string;
   subject: string;
-  html: string;
+  html?: string;
+  text?: string;
 }
 
-export class EmailService {
-  private transporter;
+class EmailService {
+  private apiKey: string;
+  private apiUrl: string;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
-      port: Number(process.env.MAIL_PORT),
-      secure: false, // TLS
-      auth: {
-        user: process.env.MAIL_USERNAME,
-        pass: process.env.MAIL_PASSWORD,
-      },
-    });
-  }
-
-  async sendEmail(options: EmailOptions) {
-    try {
-      const info = await this.transporter.sendMail({
-        from: process.env.MAIL_FROM_ADDRESS,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-      });
-
-      console.log("✅ Email sent:", info.messageId);
-    } catch (error) {
-      console.error("❌ Email failed:", error);
+    this.apiKey = process.env.MAILS_API_KEY || '';
+    this.apiUrl = 'https://api.mails.so/v1/batch';
+    if (!this.apiKey) {
+      console.warn('⚠️ MAILS_API_KEY not set in .env');
     }
   }
 
-  async sendOTP(email: string, otp: string) {
-    await this.sendEmail({
-      to: email,
-      subject: "Your OTP Code",
-      html: `
-        <h2>Your OTP Code</h2>
-        <p>Use this code to login:</p>
-        <h1>${otp}</h1>
-        <p>This expires in 5 minutes.</p>
-      `,
-    });
+  async sendEmail(options: SendEmailOptions) {
+    if (!this.apiKey) throw new Error('MAILS_API_KEY is missing');
+
+    const payload = {
+      emails: Array.isArray(options.to) ? options.to : [options.to],
+      subject: options.subject,
+      html: options.html,
+      text: options.text || options.html?.replace(/<[^>]+>/g, ''),
+      from: process.env.EMAIL_FROM || 'Peregrine Construction <noreply@peregrine.com>',
+    };
+
+    try {
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-mails-api-key': this.apiKey,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to send email via Mails.so');
+      }
+
+      console.log(`✅ Email sent to ${options.to}`);
+      return result;
+    } catch (error: any) {
+      console.error(`❌ Failed to send email to ${options.to}:`, error.message);
+      throw error;
+    }
   }
 }
 
