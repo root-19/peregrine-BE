@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 interface SendEmailOptions {
   to: string;
@@ -8,55 +9,91 @@ interface SendEmailOptions {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private resend: Resend | null = null;
+  private transporter: nodemailer.Transporter | null = null;
+  private useResend: boolean = false;
 
   constructor() {
-    const port = parseInt(process.env.MAIL_PORT || '465');
-    
-    this.transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST || 'smtp.gmail.com',
-      port,
-      secure: port === 465, // SSL for 465, STARTTLS for 587
-      auth: {
-        user: process.env.MAIL_USERNAME,
-        pass: process.env.MAIL_PASSWORD,
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      // Short timeouts so it fails fast instead of hanging 3-5 min
-      connectionTimeout: 10000,  // 10 seconds to connect
-      greetingTimeout: 10000,    // 10 seconds for greeting
-      socketTimeout: 15000,      // 15 seconds for socket
-    });
+    // Priority 1: Resend HTTP API (works on Railway/cloud)
+    const resendKey = process.env.RESEND_API_KEY;
+    if (resendKey) {
+      this.resend = new Resend(resendKey);
+      this.useResend = true;
+      console.log('🚀 Email service: Using Resend HTTP API');
+    }
 
-    this.transporter.verify((error) => {
-      if (error) {
-        console.error('❌ SMTP Connection Error:', error.message);
-        console.log('💡 Tip: If deployed on Railway/Render, SMTP ports may be blocked. Consider using an HTTP email API.');
+    // Priority 2: SMTP fallback (works locally)
+    const smtpUser = process.env.MAIL_USERNAME;
+    const smtpPass = process.env.MAIL_PASSWORD;
+    if (smtpUser && smtpPass) {
+      const port = parseInt(process.env.MAIL_PORT || '465');
+      this.transporter = nodemailer.createTransport({
+        host: process.env.MAIL_HOST || 'smtp.gmail.com',
+        port,
+        secure: port === 465,
+        auth: { user: smtpUser, pass: smtpPass },
+        tls: { rejectUnauthorized: false },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+      });
+      if (!this.useResend) {
+        console.log('🚀 Email service: Using SMTP');
       } else {
-        console.log('🚀 SMTP Server is ready to take our messages');
+        console.log('📧 SMTP available as fallback');
       }
-    });
+    }
+
+    if (!this.resend && !this.transporter) {
+      console.error('❌ No email service configured! Set RESEND_API_KEY or MAIL_USERNAME/MAIL_PASSWORD');
+    }
   }
 
   async sendEmail(options: SendEmailOptions) {
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || '"Peregrine" <noreply@yourdomain.com>',
-      to: options.to,
-      subject: options.subject,
-      text: options.text || options.html.replace(/<[^>]+>/g, ''),
-      html: options.html,
-    };
+    const from = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
-    try {
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email sent via SMTP:', info.messageId);
-      return info;
-    } catch (error: any) {
-      console.error('❌ SMTP Send Error:', error.message);
-      throw error;
+    // Try Resend first (HTTP-based, works on Railway)
+    if (this.resend) {
+      try {
+        const { data, error } = await this.resend.emails.send({
+          from,
+          to: [options.to],
+          subject: options.subject,
+          html: options.html,
+        });
+
+        if (error) {
+          console.error('❌ Resend API Error:', error.message);
+          // Fall through to SMTP
+        } else {
+          console.log(`✅ Email sent via Resend to: ${options.to} (ID: ${data?.id})`);
+          return data;
+        }
+      } catch (err: any) {
+        console.error('❌ Resend failed:', err.message);
+        // Fall through to SMTP
+      }
     }
+
+    // Fallback to SMTP
+    if (this.transporter) {
+      try {
+        const info = await this.transporter.sendMail({
+          from,
+          to: options.to,
+          subject: options.subject,
+          text: options.text || options.html.replace(/<[^>]+>/g, ''),
+          html: options.html,
+        });
+        console.log(`✅ Email sent via SMTP to: ${options.to} (ID: ${info.messageId})`);
+        return info;
+      } catch (err: any) {
+        console.error('❌ SMTP failed:', err.message);
+        throw err;
+      }
+    }
+
+    throw new Error('No email service available');
   }
 
   async validateEmail(email: string): Promise<boolean> {
