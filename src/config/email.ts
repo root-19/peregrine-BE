@@ -10,18 +10,15 @@ interface EmailValidationResponse {
     result: 'deliverable' | 'undeliverable' | 'risky' | 'unknown';
     reason: string;
     score: number;
-    is_disposable: boolean;
-    is_free: boolean;
     [key: string]: any;
   };
   error: null | any;
-  [key: string]: any;
 }
 
 interface SendEmailOptions {
   to: string;
   subject: string;
-  html?: string;
+  html: string;
   text?: string;
 }
 
@@ -34,75 +31,66 @@ class EmailService {
     this.apiKey = process.env.MAILS_API_KEY || '';
     this.apiUrl = 'https://api.mails.so/v1/batch';
     this.validationUrl = 'https://api.mails.so/v1/validate';
+    
     if (!this.apiKey) {
-      console.warn('⚠️ MAILS_API_KEY not set in .env');
+      console.error('❌ CRITICAL: MAILS_API_KEY is missing from environment variables!');
     }
   }
 
-  async validateEmail(email: string): Promise<EmailValidationResponse> {
-    if (!this.apiKey) throw new Error('MAILS_API_KEY is missing');
+  async validateEmail(email: string): Promise<boolean> {
+    if (!this.apiKey) return false;
 
     try {
       const response = await fetch(`${this.validationUrl}?email=${encodeURIComponent(email)}`, {
         method: 'GET',
-        headers: {
-          'x-mails-api-key': this.apiKey,
-        },
+        headers: { 'x-mails-api-key': this.apiKey },
       });
 
       const result = (await response.json()) as EmailValidationResponse;
-
-      if (!response.ok) {
-        throw new Error(result.error?.message || result.error || 'Failed to validate email via Mails.so');
-      }
-
-      console.log(`🔍 Email validation result for ${email}:`, result);
-      return result;
+      
+      // Return true if deliverable/risky and score is decent
+      return (
+        result.data?.result === 'deliverable' || 
+        (result.data?.result === 'risky' && result.data?.score >= 50)
+      );
     } catch (error: any) {
-      console.error(`❌ Failed to validate email ${email}:`, error.message);
-      throw error;
+      console.error(`🔍 Validation Error (${email}):`, error.message);
+      return true; // Fallback to true so we don't block users if validation API is down
     }
-  }
-
-  isEmailValid(validation: EmailValidationResponse): boolean {
-    return validation.data && 
-           (validation.data.result === 'deliverable' || validation.data.result === 'risky') &&
-           validation.data.score >= 50;
   }
 
   async sendEmail(options: SendEmailOptions) {
-    if (!this.apiKey) throw new Error('MAILS_API_KEY is missing');
+    if (!this.apiKey) throw new Error('MAILS_API_KEY is not configured');
 
     const payload = {
+      // Mails.so batch expects an array of recipients
       emails: Array.isArray(options.to) ? options.to : [options.to],
       subject: options.subject,
       html: options.html,
-      text: options.text || options.html?.replace(/<[^>]+>/g, ''),
-      from: process.env.EMAIL_FROM || 'Peregrine Construction <noreply@peregrine.com>',
+      text: options.text || options.html.replace(/<[^>]+>/g, ''),
+      // IMPORTANT: This domain MUST be verified in your Mails.so dashboard
+      from: process.env.EMAIL_FROM || 'Peregrine <noreply@peregrine.com>',
     };
 
-    try {
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-mails-api-key': this.apiKey,
-        },
-        body: JSON.stringify(payload),
-      });
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-mails-api-key': this.apiKey,
+      },
+      body: JSON.stringify(payload),
+    });
 
-      const result = (await response.json()) as MailsApiResponse;
+    const result = (await response.json()) as MailsApiResponse;
 
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to send email via Mails.so');
-      }
-
-      console.log(`✅ Email sent to ${options.to}`);
-      return result;
-    } catch (error: any) {
-      console.error(`❌ Failed to send email to ${options.to}:`, error.message);
-      throw error;
+    if (!response.ok) {
+      // This will show you exactly WHY the email didn't send in Railway logs
+      console.error('❌ Mails.so API Rejected Request:', JSON.stringify(result, null, 2));
+      throw new Error(result.message || `API Error: ${response.status}`);
     }
+
+    console.log(`✅ Email accepted by API for: ${options.to}`);
+    return result;
   }
 }
 

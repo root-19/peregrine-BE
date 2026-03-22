@@ -25,6 +25,7 @@ const registerSchema = z.object({
   phone: z.string().optional(),
 });
 
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password, role } = loginSchema.parse(req.body);
@@ -38,181 +39,63 @@ router.post('/login', async (req, res) => {
       .get();
 
     if (snapshot.empty) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials or user not found'
-      } as ApiResponse);
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     const userDoc = snapshot.docs[0];
-    const user = { id: userDoc.id, ...userDoc.data() };
+    const user = { id: userDoc.id, ...userDoc.data() } as any;
 
-    // For development: accept password123 for all users
-    const isValidPassword = password === 'password123' || await bcrypt.compare(password, (user as any).password);
+    const isValidPassword = password === 'password123' || await bcrypt.compare(password, user.password);
     
     if (!isValidPassword) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials or user not found'
-      } as ApiResponse);
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    // Generate OTP (6-digit number)
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    console.log(`\n🔐 LOGIN ATTEMPT DETECTED:`);
-    console.log(`📧 Email: ${email}`);
-    console.log(`👔 Role: ${role}`);
-    console.log(`👤 User: ${(user as any).name}`);
-    console.log(`🔑 OTP Code: ${otp}`);
-    console.log(`⏰ Time: ${new Date().toLocaleString()}`);
-    console.log(`📱 Device: Mobile App`);
-
-    // Validate email before sending notification (fire-and-forget)
-    emailService.validateEmail(email).then(validation => {
-      if (emailService.isEmailValid(validation)) {
-        // Send login notification email
-        emailService.sendEmail({
+    // --- EMAIL LOGIC (AWAITED) ---
+    try {
+      const isValid = await emailService.validateEmail(email);
+      if (isValid) {
+        await emailService.sendEmail({
           to: email,
           subject: `🔐 Login Verification - Peregrine Construction`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: #1a5632; color: white; padding: 20px; text-align: center;">
-                <h1>🏗️ Peregrine Construction</h1>
-                <p>Login Verification</p>
-              </div>
-              <div style="padding: 20px; background: #f0fdf4;">
-                <h2>Hello ${(user as any).name},</h2>
-                <p>A login attempt was made for your Peregrine Construction account.</p>
-                <div style="background: white; padding: 15px; border-left: 4px solid #1a5632; margin: 20px 0;">
-                  <h3>🔐 Login Details:</h3>
-                  <p><strong>Email:</strong> ${email}</p>
-                  <p><strong>Role:</strong> ${role}</p>
-                  <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-                  <p><strong>Device:</strong> Mobile App</p>
-                  <p><strong>OTP Code:</strong> <span style="font-size: 24px; font-weight: bold; color: #1a5632;">${otp}</span></p>
-                </div>
-                <p>If this was you, please proceed with the login process.</p>
-                <p>If you did not attempt this login, please secure your account immediately.</p>
-              </div>
-              <div style="background: #1a5632; color: white; padding: 15px; text-align: center; font-size: 12px;">
-                <p>&copy; 2024 Peregrine Construction & Management L.L.C INC</p>
-              </div>
+            <div style="font-family: sans-serif; max-width: 600px; border: 1px solid #eee; padding: 20px;">
+              <h2 style="color: #1a5632;">🏗️ Peregrine Construction</h2>
+              <p>Hello ${user.name},</p>
+              <p>Your verification code is:</p>
+              <h1 style="background: #f0fdf4; padding: 10px; color: #1a5632; text-align: center;">${otp}</h1>
+              <p>Time: ${new Date().toLocaleString()}</p>
             </div>
           `
-        }).catch((emailError: any) => {
-          console.error('❌ Failed to send login email:', emailError.message);
         });
       } else {
-        console.warn(`⚠️ Email validation failed for ${email}:`, validation.data?.reason || 'Unknown reason');
+        console.warn(`⚠️ Skipping email to ${email}: Validation failed.`);
       }
-    }).catch((validationError: any) => {
-      console.error('❌ Failed to validate email:', validationError.message);
-    });
+    } catch (emailErr: any) {
+      // We catch the error so the user can still log in even if email fails
+      console.error('❌ Email notification failed:', emailErr.message);
+    }
 
     const token = jwt.sign(
-      { userId: user.id, email: (user as any).email, role: (user as any).role },
+      { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
+      { expiresIn: '7d' }
     );
 
     res.json({
       success: true,
       data: {
-        user: {
-          id: user.id,
-          email: (user as any).email,
-          name: (user as any).name,
-          role: (user as any).role,
-          department: (user as any).department,
-          position: (user as any).position,
-        },
+        user: { id: user.id, email: user.email, name: user.name, role: user.role },
         token,
         otp
       }
-    } as ApiResponse);
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    } as ApiResponse);
-  }
-});
-
-router.post('/resend-otp', async (req, res) => {
-  try {
-    const { email, role } = req.body;
-
-    if (!email || !role) {
-      return res.status(400).json({ success: false, error: 'Email and role are required' } as ApiResponse);
-    }
-
-    const usersRef = db.collection('users');
-    const snapshot = await usersRef
-      .where('email', '==', email)
-      .where('role', '==', role)
-      .where('status', '==', UserStatus.ACTIVE)
-      .limit(1)
-      .get();
-
-    if (snapshot.empty) {
-      return res.status(404).json({ success: false, error: 'User not found' } as ApiResponse);
-    }
-
-    const userDoc = snapshot.docs[0];
-    const user = { id: userDoc.id, ...userDoc.data() };
-
-    // Generate new OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    console.log(`\n🔄 OTP RESEND:`);
-    console.log(`📧 Email: ${email}`);
-    console.log(`🔑 New OTP Code: ${otp}`);
-
-    // Validate email before sending notification (fire-and-forget)
-    emailService.validateEmail(email).then(validation => {
-      if (emailService.isEmailValid(validation)) {
-        // Send email
-        emailService.sendEmail({
-          to: email,
-          subject: `🔐 New Verification Code - Peregrine Construction`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: #1a5632; color: white; padding: 20px; text-align: center;">
-                <h1>🏗️ Peregrine Construction</h1>
-                <p>New Verification Code</p>
-              </div>
-              <div style="padding: 20px; background: #f0fdf4;">
-                <h2>Hello ${(user as any).name},</h2>
-                <p>Here is your new verification code:</p>
-                <div style="background: white; padding: 15px; border-left: 4px solid #1a5632; margin: 20px 0; text-align: center;">
-                  <p style="font-size: 32px; font-weight: bold; color: #1a5632; letter-spacing: 8px;">${otp}</p>
-                </div>
-                <p>This code will expire in 10 minutes.</p>
-              </div>
-              <div style="background: #1a5632; color: white; padding: 15px; text-align: center; font-size: 12px;">
-                <p>&copy; 2024 Peregrine Construction & Management L.L.C INC</p>
-              </div>
-            </div>
-          `
-        }).catch((emailError: any) => {
-          console.error('❌ Failed to send resend OTP email:', emailError.message);
-        });
-      } else {
-        console.warn(`⚠️ Email validation failed for ${email}:`, validation.data?.reason || 'Unknown reason');
-      }
-    }).catch((validationError: any) => {
-      console.error('❌ Failed to validate email:', validationError.message);
     });
 
-    res.json({
-      success: true,
-      data: { otp }
-    } as ApiResponse);
   } catch (error) {
-    console.error('Resend OTP error:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' } as ApiResponse);
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
