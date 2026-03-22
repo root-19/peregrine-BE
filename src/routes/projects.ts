@@ -74,26 +74,38 @@ router.post('/', authenticateToken, restrictEmployeeActions, async (req: AuthReq
 
 router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
+    console.log('\n📋 GET PROJECTS - Request received');
+    console.log('📋 User:', req.user?.name, 'Role:', req.user?.role);
+    
     let query = db.collection('projects').orderBy('created_at', 'desc');
     
     // If user is EMPLOYEE, only show projects where they are team members
     if (req.user?.role === 'EMPLOYEE') {
+      console.log('📋 EMPLOYEE user detected - filtering assigned projects');
       const snapshot = await query.get();
       const allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      console.log('📋 Total projects in DB:', allProjects.length);
       
       // Filter projects where employee is assigned as team member
       const assignedProjects = allProjects.filter(project => 
         project.teamMembers && project.teamMembers.includes(req.user!.id)
       );
       
+      console.log('📋 Assigned projects for employee:', assignedProjects.length);
+      
       res.json({
         success: true,
         data: assignedProjects
       } as ApiResponse<Project[]>);
     } else {
+      console.log('📋 Non-EMPLOYEE user - showing all projects');
       // For other roles, show all projects
       const snapshot = await query.get();
       const projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      console.log('📋 Total projects returned:', projects.length);
+      console.log('📋 Projects:', projects.map(p => ({ id: p.id, name: p.name })));
       
       res.json({
         success: true,

@@ -8,6 +8,7 @@ interface AuthRequest extends Request {
     id: string;
     email: string;
     role: UserRole;
+    name?: string;
   };
 }
 
@@ -45,7 +46,8 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     req.user = {
       id: userDoc.id,
       email: userData.email,
-      role: userData.role
+      role: userData.role,
+      name: userData.name,
     };
 
     next();
