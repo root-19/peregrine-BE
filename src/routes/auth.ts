@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { db } from '../config/supabase';
 import { UserRole, UserStatus, ApiResponse } from '../types';
 import rateLimit from 'express-rate-limit';
-import { mailsService } from '../config/email';
+import { emailService } from '../config/email';
 
 const router = express.Router();
 

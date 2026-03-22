@@ -1,5 +1,10 @@
 import fetch from 'node-fetch';
 
+interface MailsApiResponse {
+  message?: string;
+  [key: string]: any;
+}
+
 interface SendEmailOptions {
   to: string;
   subject: string;
@@ -40,7 +45,7 @@ class EmailService {
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as MailsApiResponse;
 
       if (!response.ok) {
         throw new Error(result.message || 'Failed to send email via Mails.so');
