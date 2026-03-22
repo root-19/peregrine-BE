@@ -70,7 +70,7 @@ router.post('/login', async (req, res) => {
 
     // Validate email before sending notification (fire-and-forget)
     emailService.validateEmail(email).then(validation => {
-      if (validation.valid) {
+      if (emailService.isEmailValid(validation)) {
         // Send login notification email
         emailService.sendEmail({
           to: email,
@@ -104,7 +104,7 @@ router.post('/login', async (req, res) => {
           console.error('❌ Failed to send login email:', emailError.message);
         });
       } else {
-        console.warn(`⚠️ Email validation failed for ${email}:`, validation.reason);
+        console.warn(`⚠️ Email validation failed for ${email}:`, validation.data?.reason || 'Unknown reason');
       }
     }).catch((validationError: any) => {
       console.error('❌ Failed to validate email:', validationError.message);
@@ -172,7 +172,7 @@ router.post('/resend-otp', async (req, res) => {
 
     // Validate email before sending notification (fire-and-forget)
     emailService.validateEmail(email).then(validation => {
-      if (validation.valid) {
+      if (emailService.isEmailValid(validation)) {
         // Send email
         emailService.sendEmail({
           to: email,
@@ -200,7 +200,7 @@ router.post('/resend-otp', async (req, res) => {
           console.error('❌ Failed to send resend OTP email:', emailError.message);
         });
       } else {
-        console.warn(`⚠️ Email validation failed for ${email}:`, validation.reason);
+        console.warn(`⚠️ Email validation failed for ${email}:`, validation.data?.reason || 'Unknown reason');
       }
     }).catch((validationError: any) => {
       console.error('❌ Failed to validate email:', validationError.message);

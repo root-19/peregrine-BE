@@ -2,6 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import { db } from '../config/supabase';
 import { ApiResponse, Announcement } from '../types';
+import { authenticateToken, restrictEmployeeActions, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ const createAnnouncementSchema = z.object({
 });
 
 // Get all announcements
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
     console.log('📢 Fetching all announcements...');
     const snapshot = await db.collection('announcements').get();
@@ -30,7 +31,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create announcement
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, restrictEmployeeActions, async (req: AuthRequest, res) => {
   try {
     const validatedData = createAnnouncementSchema.parse(req.body);
     const now = new Date().toISOString();
@@ -51,11 +52,11 @@ router.post('/', async (req, res) => {
 });
 
 // Update announcement
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, restrictEmployeeActions, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const validatedData = createAnnouncementSchema.partial().parse(req.body);
-    const announcementRef = db.collection('announcements').doc(id);
+    const announcementRef = db.collection('announcements').doc(id as string);
     const doc = await announcementRef.get();
     if (!doc.exists) {
       return res.status(404).json({ success: false, error: 'Announcement not found' } as ApiResponse);
@@ -70,10 +71,10 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete announcement
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, restrictEmployeeActions, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-    const announcementRef = db.collection('announcements').doc(id);
+    const announcementRef = db.collection('announcements').doc(id as string);
     const doc = await announcementRef.get();
     if (!doc.exists) {
       return res.status(404).json({ success: false, error: 'Announcement not found' } as ApiResponse);

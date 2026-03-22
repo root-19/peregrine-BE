@@ -77,4 +77,23 @@ export const requireRole = (roles: UserRole[]) => {
   };
 };
 
+export const restrictEmployeeActions = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    });
+  }
+
+  // Allow EMPLOYEE to only perform GET requests (read-only)
+  if (req.user.role === UserRole.EMPLOYEE && req.method !== 'GET') {
+    return res.status(403).json({
+      success: false,
+      error: 'Employees can only view data, not create, update, or delete'
+    });
+  }
+
+  next();
+};
+
 export { AuthRequest };

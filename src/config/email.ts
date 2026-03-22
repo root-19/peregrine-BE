@@ -6,11 +6,15 @@ interface MailsApiResponse {
 }
 
 interface EmailValidationResponse {
-  valid: boolean;
-  reason?: string;
-  domain?: string;
-  mx?: boolean;
-  disposable?: boolean;
+  data: {
+    result: 'deliverable' | 'undeliverable' | 'risky' | 'unknown';
+    reason: string;
+    score: number;
+    is_disposable: boolean;
+    is_free: boolean;
+    [key: string]: any;
+  };
+  error: null | any;
   [key: string]: any;
 }
 
@@ -49,7 +53,7 @@ class EmailService {
       const result = (await response.json()) as EmailValidationResponse;
 
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to validate email via Mails.so');
+        throw new Error(result.error?.message || result.error || 'Failed to validate email via Mails.so');
       }
 
       console.log(`🔍 Email validation result for ${email}:`, result);
@@ -58,6 +62,12 @@ class EmailService {
       console.error(`❌ Failed to validate email ${email}:`, error.message);
       throw error;
     }
+  }
+
+  isEmailValid(validation: EmailValidationResponse): boolean {
+    return validation.data && 
+           (validation.data.result === 'deliverable' || validation.data.result === 'risky') &&
+           validation.data.score >= 50;
   }
 
   async sendEmail(options: SendEmailOptions) {

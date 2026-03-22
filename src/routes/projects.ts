@@ -2,6 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import { db } from '../config/supabase';
 import { ApiResponse, Project } from '../types';
+import { authenticateToken, restrictEmployeeActions, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -32,7 +33,7 @@ const updateProjectSchema = z.object({
   teamMembers: z.array(z.string()).optional(),
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, restrictEmployeeActions, async (req: AuthRequest, res) => {
   console.log('\n📝 CREATE PROJECT - Request received');
   console.log('📝 Request body:', req.body);
 
@@ -71,18 +72,34 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const snapshot = await db.collection('projects')
-      .orderBy('created_at', 'desc')
-      .get();
-
-    const projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-    res.json({
-      success: true,
-      data: projects
-    } as ApiResponse<Project[]>);
+    let query = db.collection('projects').orderBy('created_at', 'desc');
+    
+    // If user is EMPLOYEE, only show projects where they are team members
+    if (req.user?.role === 'EMPLOYEE') {
+      const snapshot = await query.get();
+      const allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Filter projects where employee is assigned as team member
+      const assignedProjects = allProjects.filter(project => 
+        project.teamMembers && project.teamMembers.includes(req.user!.id)
+      );
+      
+      res.json({
+        success: true,
+        data: assignedProjects
+      } as ApiResponse<Project[]>);
+    } else {
+      // For other roles, show all projects
+      const snapshot = await query.get();
+      const projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      res.json({
+        success: true,
+        data: projects
+      } as ApiResponse<Project[]>);
+    }
   } catch (error) {
     console.error('Projects fetch error:', error);
     res.status(500).json({
@@ -92,10 +109,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-    const doc = await db.collection('projects').doc(id).get();
+    const doc = await db.collection('projects').doc(id as string).get();
 
     if (!doc.exists) {
       return res.status(404).json({
@@ -104,9 +121,21 @@ router.get('/:id', async (req, res) => {
       } as ApiResponse);
     }
 
+    const project = { id: doc.id, ...doc.data() };
+    
+    // If user is EMPLOYEE, check if they are assigned to this project
+    if (req.user?.role === 'EMPLOYEE') {
+      if (!project.teamMembers || !project.teamMembers.includes(req.user!.id)) {
+        return res.status(403).json({
+          success: false,
+          error: 'Access denied: You are not assigned to this project'
+        } as ApiResponse);
+      }
+    }
+
     res.json({
       success: true,
-      data: { id: doc.id, ...doc.data() }
+      data: project
     } as ApiResponse<Project>);
   } catch (error) {
     console.error('Project fetch error:', error);
@@ -117,12 +146,12 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, restrictEmployeeActions, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const validatedData = updateProjectSchema.parse(req.body);
 
-    const projectRef = db.collection('projects').doc(id);
+    const projectRef = db.collection('projects').doc(id as string);
     const doc = await projectRef.get();
 
     if (!doc.exists) {
@@ -152,11 +181,11 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, restrictEmployeeActions, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
 
-    const doc = await db.collection('projects').doc(id).get();
+    const doc = await db.collection('projects').doc(id as string).get();
     if (!doc.exists) {
       return res.status(500).json({
         success: false,
@@ -164,7 +193,7 @@ router.delete('/:id', async (req, res) => {
       } as ApiResponse);
     }
 
-    await db.collection('projects').doc(id).delete();
+    await db.collection('projects').doc(id as string).delete();
 
     res.json({
       success: true,
@@ -180,7 +209,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Add team members to project
-router.post('/:id/team-members', async (req, res) => {
+router.post('/:id/team-members', authenticateToken, restrictEmployeeActions, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { teamMembers } = req.body;
@@ -192,7 +221,7 @@ router.post('/:id/team-members', async (req, res) => {
       } as ApiResponse);
     }
 
-    const projectRef = db.collection('projects').doc(id);
+    const projectRef = db.collection('projects').doc(id as string);
     const doc = await projectRef.get();
 
     if (!doc.exists) {
