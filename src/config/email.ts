@@ -5,6 +5,15 @@ interface MailsApiResponse {
   [key: string]: any;
 }
 
+interface EmailValidationResponse {
+  valid: boolean;
+  reason?: string;
+  domain?: string;
+  mx?: boolean;
+  disposable?: boolean;
+  [key: string]: any;
+}
+
 interface SendEmailOptions {
   to: string;
   subject: string;
@@ -15,12 +24,39 @@ interface SendEmailOptions {
 class EmailService {
   private apiKey: string;
   private apiUrl: string;
+  private validationUrl: string;
 
   constructor() {
     this.apiKey = process.env.MAILS_API_KEY || '';
     this.apiUrl = 'https://api.mails.so/v1/batch';
+    this.validationUrl = 'https://api.mails.so/v1/validate';
     if (!this.apiKey) {
       console.warn('⚠️ MAILS_API_KEY not set in .env');
+    }
+  }
+
+  async validateEmail(email: string): Promise<EmailValidationResponse> {
+    if (!this.apiKey) throw new Error('MAILS_API_KEY is missing');
+
+    try {
+      const response = await fetch(`${this.validationUrl}?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: {
+          'x-mails-api-key': this.apiKey,
+        },
+      });
+
+      const result = (await response.json()) as EmailValidationResponse;
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to validate email via Mails.so');
+      }
+
+      console.log(`🔍 Email validation result for ${email}:`, result);
+      return result;
+    } catch (error: any) {
+      console.error(`❌ Failed to validate email ${email}:`, error.message);
+      throw error;
     }
   }
 
