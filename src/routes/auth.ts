@@ -53,11 +53,11 @@ router.post('/login', async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // --- EMAIL LOGIC (AWAITED) ---
-    try {
-      const isValid = await emailService.validateEmail(email);
+    // --- EMAIL LOGIC (NON-BLOCKING - fire and forget) ---
+    // Send email in background so login responds instantly
+    emailService.validateEmail(email).then(isValid => {
       if (isValid) {
-        await emailService.sendEmail({
+        emailService.sendEmail({
           to: email,
           subject: `🔐 Login Verification - Peregrine Construction`,
           html: `
@@ -69,14 +69,15 @@ router.post('/login', async (req, res) => {
               <p>Time: ${new Date().toLocaleString()}</p>
             </div>
           `
+        }).then(() => {
+          console.log(`✅ OTP email sent to ${email}`);
+        }).catch((err: any) => {
+          console.error('❌ Email send failed:', err.message);
         });
-      } else {
-        console.warn(`⚠️ Skipping email to ${email}: Validation failed.`);
       }
-    } catch (emailErr: any) {
-      // We catch the error so the user can still log in even if email fails
-      console.error('❌ Email notification failed:', emailErr.message);
-    }
+    }).catch((err: any) => {
+      console.error('❌ Email validation failed:', err.message);
+    });
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },

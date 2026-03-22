@@ -11,25 +11,29 @@ class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    // Create the transporter using your Railway Variables
+    const port = parseInt(process.env.MAIL_PORT || '465');
+    
     this.transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.MAIL_PORT || '587'),
-      secure: process.env.MAIL_PORT === '465', // true for 465, false for 587
+      port,
+      secure: port === 465, // SSL for 465, STARTTLS for 587
       auth: {
-        user: process.env.MAIL_USERNAME, 
-        pass: process.env.MAIL_PASSWORD, // Your SMTP Password
+        user: process.env.MAIL_USERNAME,
+        pass: process.env.MAIL_PASSWORD,
       },
-      // Helps bypass some certificate issues in cloud environments
       tls: {
-        rejectUnauthorized: false 
-      }
+        rejectUnauthorized: false
+      },
+      // Short timeouts so it fails fast instead of hanging 3-5 min
+      connectionTimeout: 10000,  // 10 seconds to connect
+      greetingTimeout: 10000,    // 10 seconds for greeting
+      socketTimeout: 15000,      // 15 seconds for socket
     });
 
-    // Verify connection on startup
-    this.transporter.verify((error, success) => {
+    this.transporter.verify((error) => {
       if (error) {
         console.error('❌ SMTP Connection Error:', error.message);
+        console.log('💡 Tip: If deployed on Railway/Render, SMTP ports may be blocked. Consider using an HTTP email API.');
       } else {
         console.log('🚀 SMTP Server is ready to take our messages');
       }
@@ -55,7 +59,6 @@ class EmailService {
     }
   }
 
-  // Simplified validation for SMTP logic
   async validateEmail(email: string): Promise<boolean> {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
