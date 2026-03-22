@@ -1,5 +1,6 @@
 import express from 'express';
 import { db } from '../config/supabase';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -58,21 +59,91 @@ router.get('/user/:userId/unread-count', async (req, res) => {
 });
 
 // Create a new notification
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const notification = {
+    const notificationData = {
       ...req.body,
       isRead: false,
       createdAt: new Date().toISOString()
     };
     
-    const docRef = await db.collection('notifications').add(notification);
+    console.log('🔔 Creating notification:', notificationData);
     
-    res.status(201).json({
-      success: true,
-      message: 'Notification created successfully',
-      data: { id: docRef.id, ...notification }
-    });
+    // Handle ALL_USERS flag - create notifications for all active users
+    if (notificationData.recipientRole === 'ALL_USERS') {
+      console.log('📢 Creating notifications for ALL_USERS');
+      
+      // Get all active users
+      const usersSnapshot = await db.collection('users').where('status', '==', 'active').get();
+      const activeUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Filter out the user who created the notification
+      const otherUsers = activeUsers.filter((user: any) => user.id !== notificationData.actorId);
+      
+      console.log(`📢 Creating ${otherUsers.length} notifications for active users`);
+      
+      // Create notification for each user
+      const notificationPromises = otherUsers.map(async (user: any) => {
+        const userNotification = {
+          ...notificationData,
+          recipientId: user.id,
+          recipientRole: user.role,
+        };
+        
+        const docRef = await db.collection('notifications').add(userNotification);
+        console.log(`✅ Notification created for ${user.name} (${user.role})`);
+        return { id: docRef.id, ...userNotification };
+      });
+      
+      const notifications = await Promise.all(notificationPromises);
+      
+      res.status(201).json({
+        success: true,
+        message: `Created ${notifications.length} notifications for all active users`,
+        data: notifications
+      });
+      
+    } else if (notificationData.recipientRole === 'COO') {
+      console.log('📢 Creating notification for COO');
+      
+      // Find COO user
+      const cooSnapshot = await db.collection('users').where('role', '==', 'COO').where('status', '==', 'active').get();
+      const cooUsers = cooSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      if (cooUsers.length > 0) {
+        const coo = cooUsers[0];
+        const cooNotification = {
+          ...notificationData,
+          recipientId: coo.id,
+          recipientRole: coo.role,
+        };
+        
+        const docRef = await db.collection('notifications').add(cooNotification);
+        console.log(`✅ Notification created for COO: ${coo.name}`);
+        
+        res.status(201).json({
+          success: true,
+          message: 'Notification created for COO',
+          data: { id: docRef.id, ...cooNotification }
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: 'No active COO found'
+        });
+      }
+      
+    } else {
+      // Create single notification for specific user
+      const docRef = await db.collection('notifications').add(notificationData);
+      console.log(`✅ Single notification created for ${notificationData.recipientId}`);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Notification created successfully',
+        data: { id: docRef.id, ...notificationData }
+      });
+    }
   } catch (error) {
     console.error('❌ Error creating notification:', error);
     res.status(500).json({

@@ -102,7 +102,18 @@ router.get('/dashboard', async (req, res) => {
     };
     
     console.log('✅ Analytics data calculated successfully');
-    res.json({ success: true, data: analyticsData });
+    console.log('📊 Sending response:', JSON.stringify(analyticsData).substring(0, 200) + '...');
+    
+    try {
+      res.json({ success: true, data: analyticsData });
+    } catch (jsonError) {
+      console.error('❌ JSON serialization error:', jsonError);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to serialize analytics data',
+        message: 'JSON serialization error'
+      });
+    }
     
   } catch (error: any) {
     console.error('❌ Error fetching analytics:', error);

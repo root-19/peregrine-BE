@@ -2,6 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import { db } from '../config/supabase';
 import { ApiResponse } from '../types';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -18,8 +19,12 @@ const createMaterialRequestSchema = z.object({
 });
 
 // Create a new material request
-router.post('/requests', async (req, res) => {
+router.post('/requests', authenticateToken, async (req: AuthRequest, res) => {
   try {
+    console.log('\n📦 CREATE MATERIAL REQUEST - Request received');
+    console.log('📦 Request body:', req.body);
+    console.log('📦 User:', req.user?.name, 'Role:', req.user?.role);
+    
     // Validate request body
     const validatedData = createMaterialRequestSchema.parse(req.body);
     
@@ -60,8 +65,11 @@ router.post('/requests', async (req, res) => {
 });
 
 // Get all material requests
-router.get('/requests', async (req, res) => {
+router.get('/requests', authenticateToken, async (req: AuthRequest, res) => {
   try {
+    console.log('\n📦 GET MATERIAL REQUESTS - Request received');
+    console.log('📦 User:', req.user?.name, 'Role:', req.user?.role);
+    
     const { projectId, status } = req.query;
     
     let snapshot;
@@ -113,9 +121,12 @@ router.get('/requests', async (req, res) => {
 });
 
 // Get material requests by project ID
-router.get('/requests/project/:projectId', async (req, res) => {
+router.get('/requests/project/:projectId', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { projectId } = req.params;
+    console.log('\n📦 GET PROJECT MATERIAL REQUESTS - Request received');
+    console.log('📦 Project ID:', projectId);
+    console.log('📦 User:', req.user?.name, 'Role:', req.user?.role);
     
     const snapshot = await db
       .collection('material_requests')
@@ -143,10 +154,15 @@ router.get('/requests/project/:projectId', async (req, res) => {
 });
 
 // Update material request status
-router.put('/requests/:id', async (req, res) => {
+router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    
+    console.log('\n📦 UPDATE MATERIAL REQUEST STATUS - Request received');
+    console.log('📦 Request ID:', id);
+    console.log('📦 New Status:', status);
+    console.log('📦 User:', req.user?.name, 'Role:', req.user?.role);
     
     if (!status) {
       return res.status(400).json({
@@ -157,7 +173,7 @@ router.put('/requests/:id', async (req, res) => {
     
     await db
       .collection('material_requests')
-      .doc(id)
+      .doc(id as string)
       .update({ 
         status, 
         updatedAt: new Date().toISOString() 
