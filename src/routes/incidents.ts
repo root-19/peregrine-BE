@@ -51,7 +51,8 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const doc = await db.collection('incident_reports').doc(id).get();
+    const incidentId = Array.isArray(id) ? id[0] : id;
+    const doc = await db.collection('incident_reports').doc(incidentId).get();
 
     if (!doc.exists) {
       return res.status(404).json({
@@ -111,7 +112,8 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
     const { id } = req.params;
     const validatedData = updateIncidentSchema.parse(req.body);
 
-    const incidentRef = db.collection('incident_reports').doc(id);
+    const incidentId = Array.isArray(id) ? id[0] : id;
+    const incidentRef = db.collection('incident_reports').doc(incidentId);
     const doc = await incidentRef.get();
 
     if (!doc.exists) {
