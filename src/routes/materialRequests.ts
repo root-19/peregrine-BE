@@ -18,12 +18,67 @@ const createMaterialRequestSchema = z.object({
   requestedByName: z.string().min(1, 'Requested by name is required'),
 });
 
+// Schema for status update validation
+const updateStatusSchema = z.object({
+  status: z.enum(['MR_SUBMITTED', 'PROCUREMENT_CHECKED', 'PM_VERIFIED', 'COO_APPROVED', 'PURCHASED', 'DELIVERED', 'REJECTED']),
+  comment: z.string().optional()
+});
+
+// Helper function to check if user can perform status transition
+function canUpdateStatus(userRole: string, userPosition: string, currentStatus: string, newStatus: string): boolean {
+  const isProcurement = userPosition?.toLowerCase().includes('procurement');
+  const isSiteManager = userPosition?.toLowerCase().includes('site manager');
+  const isManager = userRole === 'MANAGER';
+  const isCOO = userRole === 'COO';
+  
+  // Site Manager employees can only submit (create) requests
+  if (userRole === 'EMPLOYEE' && isSiteManager) {
+    return false; // Site Managers can't update status, only create
+  }
+  
+  // Procurement employees can check submitted requests
+  if (userRole === 'EMPLOYEE' && isProcurement && currentStatus === 'MR_SUBMITTED' && newStatus === 'PROCUREMENT_CHECKED') {
+    return true;
+  }
+  
+  // Manager can verify checked requests
+  if (isManager && currentStatus === 'PROCUREMENT_CHECKED' && newStatus === 'PM_VERIFIED') {
+    return true;
+  }
+  
+  // COO can approve verified requests or reject at any stage
+  if (isCOO) {
+    if (currentStatus === 'PM_VERIFIED' && newStatus === 'COO_APPROVED') {
+      return true;
+    }
+    // COO can reject at any stage
+    if (newStatus === 'REJECTED') {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 // Create a new material request
 router.post('/requests', authenticateToken, async (req: AuthRequest, res) => {
   try {
     console.log('\n📦 CREATE MATERIAL REQUEST - Request received');
     console.log('📦 Request body:', req.body);
-    console.log('📦 User:', req.user?.name, 'Role:', req.user?.role);
+    console.log('📦 User:', req.user?.name, 'Role:', req.user?.role, 'Position:', req.user?.position);
+    
+    // Check if user is authorized to create material requests
+    // Only Site Manager employees can create requests
+    const isSiteManager = req.user?.position?.toLowerCase().includes('site manager');
+    const isCOO = req.user?.role === 'COO';
+    const isManager = req.user?.role === 'MANAGER';
+    
+    if (req.user?.role === 'EMPLOYEE' && !isSiteManager) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only Site Manager employees can create material requests'
+      });
+    }
     
     // Validate request body
     const validatedData = createMaterialRequestSchema.parse(req.body);
@@ -157,34 +212,81 @@ router.get('/requests/project/:projectId', authenticateToken, async (req: AuthRe
 router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const validatedData = updateStatusSchema.parse(req.body);
+    const { status, comment } = validatedData;
     
     console.log('\n📦 UPDATE MATERIAL REQUEST STATUS - Request received');
     console.log('📦 Request ID:', id);
     console.log('📦 New Status:', status);
-    console.log('📦 User:', req.user?.name, 'Role:', req.user?.role);
+    console.log('📦 User:', req.user?.name, 'Role:', req.user?.role, 'Position:', req.user?.position);
     
-    if (!status) {
-      return res.status(400).json({
+    // Get current request
+    const requestDoc = await db.collection('material_requests').doc(id as string).get();
+    if (!requestDoc.exists) {
+      return res.status(404).json({
         success: false,
-        message: 'Status is required'
+        message: 'Material request not found'
       });
     }
     
+    const currentRequest = requestDoc.data();
+    const currentStatus = currentRequest?.status;
+    
+    // Check if user can perform this status transition
+    const canUpdate = canUpdateStatus(
+      req.user?.role || '',
+      req.user?.position || '',
+      currentStatus,
+      status
+    );
+    
+    if (!canUpdate) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to perform this status update',
+        details: {
+          userRole: req.user?.role,
+          userPosition: req.user?.position,
+          currentStatus,
+          requestedStatus: status
+        }
+      });
+    }
+    
+    // Add to history
+    const historyEntry = {
+      action: `Status changed from ${currentStatus} to ${status}`,
+      actorId: req.user?.id,
+      actorName: req.user?.name,
+      actorRole: req.user?.role,
+      timestamp: new Date().toISOString(),
+      comment: comment || ''
+    };
+    
+    // Update request
     await db
       .collection('material_requests')
       .doc(id as string)
       .update({ 
         status, 
-        updatedAt: new Date().toISOString() 
+        updatedAt: new Date().toISOString(),
+        history: [...(currentRequest?.history || []), historyEntry]
       });
     
     res.json({
       success: true,
-      message: 'Material request status updated successfully'
+      message: `Material request ${status.replace('_', ' ').toLowerCase()} successfully`,
+      historyEntry
     });
   } catch (error) {
     console.error('❌ Error updating material request:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.issues
+      });
+    }
     res.status(500).json({
       success: false,
       message: 'Failed to update material request',

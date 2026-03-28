@@ -88,7 +88,7 @@ router.post('/login', async (req, res) => {
     res.json({
       success: true,
       data: {
-        user: { id: user.id, email: user.email, name: user.name, role: user.role },
+        user: { id: user.id, email: user.email, name: user.name, role: user.role, position: user.position || '', phone: user.phone || '', avatar: user.avatar || '', joinDate: user.joinDate || '', status: user.status || 'active' },
         token,
         otp
       }

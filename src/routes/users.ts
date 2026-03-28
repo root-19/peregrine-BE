@@ -1,5 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import { db } from '../config/supabase';
 import { ApiResponse, User } from '../types';
 
@@ -31,6 +32,7 @@ const updateProfileSchema = z.object({
   phone: z.string().optional(),
   profileimage: z.string().url().optional().nullable(),
   about: z.string().optional(),
+  position: z.string().optional(),
 });
 
 // Helper to strip password from user data
@@ -82,10 +84,14 @@ router.post('/', async (req, res) => {
       } as ApiResponse);
     }
 
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+
     // Create user with timestamps
     const now = new Date().toISOString();
     const userData = {
       ...validatedData,
+      password: hashedPassword,
       createdAt: now,
       updatedAt: now
     };
