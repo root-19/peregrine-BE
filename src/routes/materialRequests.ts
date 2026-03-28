@@ -42,34 +42,38 @@ function canUpdateStatus(userRole: string, userPosition: string, currentStatus: 
   const isSiteManager = userPosition?.toLowerCase().includes('site manager');
   const isManager = userRole === 'MANAGER';
   const isCOO = userRole === 'COO';
-  
+
+  // Normalize both statuses so old simple-value DB records work
+  const normCurrent = normalizeStatus(currentStatus);
+  const normNew = normalizeStatus(newStatus);
+
   // Site Manager employees can only submit (create) requests
   if (userRole === 'EMPLOYEE' && isSiteManager) {
-    return false; // Site Managers can't update status, only create
+    return false;
   }
   
   // Procurement employees can check submitted requests
-  if (userRole === 'EMPLOYEE' && isProcurement && currentStatus === 'MR_SUBMITTED' && newStatus === 'PROCUREMENT_CHECKED') {
+  if (userRole === 'EMPLOYEE' && isProcurement && normCurrent === 'MR_SUBMITTED' && normNew === 'PROCUREMENT_CHECKED') {
     return true;
   }
   
   // Manager can verify checked requests
-  if (isManager && currentStatus === 'PROCUREMENT_CHECKED' && newStatus === 'PM_VERIFIED') {
+  if (isManager && normCurrent === 'PROCUREMENT_CHECKED' && normNew === 'PM_VERIFIED') {
     return true;
   }
   
   // COO can approve verified requests or reject at any stage
   if (isCOO) {
-    if (currentStatus === 'PM_VERIFIED' && newStatus === 'COO_APPROVED') {
+    if (normCurrent === 'PM_VERIFIED' && normNew === 'COO_APPROVED') {
       return true;
     }
-    if (newStatus === 'REJECTED') {
+    if (normNew === 'REJECTED') {
       return true;
     }
   }
 
   // Procurement and Manager can also reject
-  if ((isProcurement || isManager) && newStatus === 'REJECTED') {
+  if ((isProcurement || isManager) && normNew === 'REJECTED') {
     return true;
   }
   
@@ -224,7 +228,6 @@ router.get('/requests/project/:projectId', authenticateToken, async (req: AuthRe
   }
 });
 
-// Update material request status
 router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
