@@ -18,11 +18,23 @@ const createMaterialRequestSchema = z.object({
   requestedByName: z.string().min(1, 'Requested by name is required'),
 });
 
-// Schema for status update validation
+// Schema for status update validation — accepts both simple and canonical values
 const updateStatusSchema = z.object({
-  status: z.enum(['MR_SUBMITTED', 'PROCUREMENT_CHECKED', 'PM_VERIFIED', 'COO_APPROVED', 'PURCHASED', 'DELIVERED', 'REJECTED']),
+  status: z.enum(['MR_SUBMITTED', 'PROCUREMENT_CHECKED', 'PM_VERIFIED', 'COO_APPROVED', 'PURCHASED', 'DELIVERED', 'REJECTED', 'submitted', 'checked', 'verified', 'purchased', 'rejected']),
   comment: z.string().optional()
 });
+
+// Normalize simple frontend status values to canonical DB values
+function normalizeStatus(s: string): string {
+  const map: Record<string, string> = {
+    'submitted': 'MR_SUBMITTED',
+    'checked': 'PROCUREMENT_CHECKED',
+    'verified': 'PM_VERIFIED',
+    'purchased': 'COO_APPROVED',
+    'rejected': 'REJECTED',
+  };
+  return map[s] || s;
+}
 
 // Helper function to check if user can perform status transition
 function canUpdateStatus(userRole: string, userPosition: string, currentStatus: string, newStatus: string): boolean {
@@ -51,10 +63,14 @@ function canUpdateStatus(userRole: string, userPosition: string, currentStatus: 
     if (currentStatus === 'PM_VERIFIED' && newStatus === 'COO_APPROVED') {
       return true;
     }
-    // COO can reject at any stage
     if (newStatus === 'REJECTED') {
       return true;
     }
+  }
+
+  // Procurement and Manager can also reject
+  if ((isProcurement || isManager) && newStatus === 'REJECTED') {
+    return true;
   }
   
   return false;
@@ -213,7 +229,8 @@ router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => 
   try {
     const { id } = req.params;
     const validatedData = updateStatusSchema.parse(req.body);
-    const { status, comment } = validatedData;
+    const { comment } = validatedData;
+    const status = normalizeStatus(validatedData.status);
     
     console.log('\n📦 UPDATE MATERIAL REQUEST STATUS - Request received');
     console.log('📦 Request ID:', id);
