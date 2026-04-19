@@ -1,0 +1,122 @@
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { db } from '../config/supabase';
+import { UserRole } from '../types';
+
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    role: UserRole;
+    name?: string;
+    position?: string;
+  };
+}
+
+export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: 'Access token required'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    const userDoc = await db.collection('users').doc(decoded.userId).get();
+
+    if (!userDoc.exists) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid token or user not found'
+      });
+    }
+
+    const userData = userDoc.data()!;
+    if (userData.status !== 'active') {
+      return res.status(401).json({
+        success: false,
+        error: 'User account is not active'
+      });
+    }
+
+    req.user = {
+      id: userDoc.id,
+      email: userData.email,
+      role: userData.role,
+      name: userData.name,
+      position: userData.position,
+    };
+
+    next();
+  } catch (error) {
+    return res.status(403).json({
+      success: false,
+      error: 'Invalid token'
+    });
+  }
+};
+
+export const requireRole = (roles: UserRole[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Insufficient permissions'
+      });
+    }
+
+    next();
+  };
+};
+
+export const restrictEmployeeActions = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    });
+  }
+
+  // Allow EMPLOYEE to only perform GET requests (read-only)
+  if (req.user.role === UserRole.EMPLOYEE && req.method !== 'GET') {
+    return res.status(403).json({
+      success: false,
+      error: 'Employees can only view data, not create, update, or delete'
+    });
+  }
+
+  next();
+};
+
+export const restrictProjectCreation = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    });
+  }
+
+  // Only allow MANAGER (PM) and COO roles to create projects
+  if (req.user.role !== UserRole.MANAGER && req.user.role !== UserRole.COO) {
+    return res.status(403).json({
+      success: false,
+      error: 'Only Project Managers and COO can create projects'
+    });
+  }
+
+  next();
+};
+
+export { AuthRequest };
