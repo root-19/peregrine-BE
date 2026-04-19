@@ -47,8 +47,9 @@ router.get('/user/:userId', async (req, res) => {
       allNotificationsMap.set(n.id, n);
     });
     
-    // Sort by createdAt descending and apply limit
+    // Sort by createdAt descending, filter out USER_LOGIN notifications, and apply limit
     const notifications = Array.from(allNotificationsMap.values())
+      .filter((notification: any) => notification.type !== 'USER_LOGIN')
       .sort((a: any, b: any) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -83,9 +84,14 @@ router.get('/user/:userId/unread-count', async (req, res) => {
       .where('isRead', '==', false)
       .get();
     
+    // Filter out USER_LOGIN notifications from unread count
+    const filteredNotifications = snapshot.docs.filter(doc => 
+      doc.data().type !== 'USER_LOGIN'
+    );
+    
     res.json({
       success: true,
-      data: { count: snapshot.docs.length }
+      data: { count: filteredNotifications.length }
     });
   } catch (error) {
     console.error('❌ Error fetching unread count:', error);

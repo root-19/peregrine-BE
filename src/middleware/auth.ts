@@ -100,4 +100,23 @@ export const restrictEmployeeActions = (req: AuthRequest, res: Response, next: N
   next();
 };
 
+export const restrictProjectCreation = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    });
+  }
+
+  // Only allow MANAGER (PM) and COO roles to create projects
+  if (req.user.role !== UserRole.MANAGER && req.user.role !== UserRole.COO) {
+    return res.status(403).json({
+      success: false,
+      error: 'Only Project Managers and COO can create projects'
+    });
+  }
+
+  next();
+};
+
 export { AuthRequest };

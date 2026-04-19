@@ -2,7 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import { db } from '../config/supabase';
 import { ApiResponse, Project } from '../types';
-import { authenticateToken, restrictEmployeeActions, AuthRequest } from '../middleware/auth';
+import { authenticateToken, restrictEmployeeActions, restrictProjectCreation, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ const updateProjectSchema = z.object({
   teamMembers: z.array(z.string()).optional(),
 });
 
-router.post('/', authenticateToken, restrictEmployeeActions, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, restrictProjectCreation, async (req: AuthRequest, res) => {
   console.log('\n📝 CREATE PROJECT - Request received');
   console.log('📝 Request body:', req.body);
 
