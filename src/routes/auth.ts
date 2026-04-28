@@ -12,7 +12,6 @@ const router = express.Router();
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(['COO', 'MANAGER', 'EMPLOYEE', 'HR', 'HSE']),
 });
 
 const registerSchema = z.object({
@@ -28,12 +27,11 @@ const registerSchema = z.object({
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, password, role } = loginSchema.parse(req.body);
+    const { email, password } = loginSchema.parse(req.body);
 
     const usersRef = db.collection('users');
     const snapshot = await usersRef
       .where('email', '==', email)
-      .where('role', '==', role)
       .where('status', '==', UserStatus.ACTIVE)
       .limit(1)
       .get();
@@ -96,6 +94,66 @@ router.post('/login', async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+const resendOtpSchema = z.object({
+  email: z.string().email(),
+});
+
+router.post('/resend-otp', async (req, res) => {
+  try {
+    const { email } = resendOtpSchema.parse(req.body);
+
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef
+      .where('email', '==', email)
+      .where('status', '==', UserStatus.ACTIVE)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+
+    const userDoc = snapshot.docs[0];
+    const user = { id: userDoc.id, ...userDoc.data() } as any;
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Send email in background
+    emailService.validateEmail(email).then(isValid => {
+      if (isValid) {
+        emailService.sendEmail({
+          to: email,
+          subject: `🔐 Login Verification - Peregrine Construction`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; border: 1px solid #eee; padding: 20px;">
+              <h2 style="color: #1a5632;">🏗️ Peregrine Construction</h2>
+              <p>Hello ${user.name},</p>
+              <p>Your verification code is:</p>
+              <h1 style="background: #f0fdf4; padding: 10px; color: #1a5632; text-align: center;">${otp}</h1>
+              <p>Time: ${new Date().toLocaleString()}</p>
+            </div>
+          `
+        }).then(() => {
+          console.log(`✅ OTP email sent to ${email}`);
+        }).catch((err: any) => {
+          console.error('❌ Email send failed:', err.message);
+        });
+      }
+    }).catch((err: any) => {
+      console.error('❌ Email validation failed:', err.message);
+    });
+
+    res.json({
+      success: true,
+      data: { otp }
+    });
+
+  } catch (error) {
+    console.error('Resend OTP error:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
