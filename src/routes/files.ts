@@ -73,6 +73,32 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Update file
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    const fileRef = db.collection('files').doc(id);
+    const doc = await fileRef.get();
+    if (!doc.exists) {
+      return res.status(404).json({ success: false, error: 'File not found' } as ApiResponse);
+    }
+    const updatedData = {
+      ...updateData,
+      updatedAt: new Date().toISOString(),
+    };
+    await fileRef.update(updatedData);
+    res.json({ 
+      success: true, 
+      data: { id, ...doc.data(), ...updatedData },
+      message: 'File updated successfully' 
+    } as ApiResponse<ProjectFile>);
+  } catch (error) {
+    console.error('Update file error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update file' } as ApiResponse);
+  }
+});
+
 // Delete file
 router.delete('/:id', async (req, res) => {
   try {

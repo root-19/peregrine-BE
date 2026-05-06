@@ -98,6 +98,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
+
+
 const resendOtpSchema = z.object({
   email: z.string().email(),
 });
