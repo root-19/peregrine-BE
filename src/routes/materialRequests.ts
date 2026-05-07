@@ -448,11 +448,13 @@ router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => 
     const requesterName = currentRequest?.requestedByName;
     
     if (status === 'PROCUREMENT_CHECKED') {
+      const checkComment = comment ? ` Comment: ${comment}` : '';
+      
       // Notify Project Managers that a request is ready for verification
       await createNotification(
         'MATERIAL_REQUEST_CHECKED',
         'Material Request Ready for Verification',
-        `${req.user?.name} has checked the material request for ${quantity} ${unit} of ${materialName}. Ready for PM verification.`,
+        `${req.user?.name} has checked the material request for ${quantity} ${unit} of ${materialName}. Ready for PM verification.${checkComment}`,
         req.user?.id || '',
         req.user?.name || '',
         'MANAGER',
@@ -466,7 +468,7 @@ router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => 
         await createNotification(
           'MATERIAL_REQUEST_CHECKED',
           'Material Request Checked',
-          `Your request for ${quantity} ${unit} of ${materialName} has been checked by procurement and is now under PM review.`,
+          `Your request for ${quantity} ${unit} of ${materialName} has been checked by procurement and is now under PM review.${checkComment}`,
           req.user?.id || '',
           req.user?.name || '',
           undefined,
@@ -476,11 +478,13 @@ router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => 
         );
       }
     } else if (status === 'PM_VERIFIED') {
+      const verifyComment = comment ? ` Comment: ${comment}` : '';
+      
       // Notify COO that a request is ready for approval
       await createNotification(
         'MATERIAL_REQUEST_VERIFIED',
         'Material Request Ready for Approval',
-        `${req.user?.name} has verified the material request for ${quantity} ${unit} of ${materialName}. Ready for COO approval.`,
+        `${req.user?.name} has verified the material request for ${quantity} ${unit} of ${materialName}. Ready for COO approval.${verifyComment}`,
         req.user?.id || '',
         req.user?.name || '',
         'COO',
@@ -494,7 +498,7 @@ router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => 
         await createNotification(
           'MATERIAL_REQUEST_VERIFIED',
           'Material Request Verified',
-          `Your request for ${quantity} ${unit} of ${materialName} has been verified by the Project Manager and is now pending COO approval.`,
+          `Your request for ${quantity} ${unit} of ${materialName} has been verified by the Project Manager and is now pending COO approval.${verifyComment}`,
           req.user?.id || '',
           req.user?.name || '',
           undefined,
@@ -504,11 +508,13 @@ router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => 
         );
       }
     } else if (status === 'COO_APPROVED') {
+      const approvalComment = comment ? ` Comment: ${comment}` : '';
+      
       // Notify Procurement team to proceed with purchase
       await createNotification(
         'MATERIAL_REQUEST_PURCHASED',
         'Material Request Approved - Ready for Purchase',
-        `${req.user?.name} has approved the material request for ${quantity} ${unit} of ${materialName}. Please proceed with purchase.`,
+        `${req.user?.name} has approved the material request for ${quantity} ${unit} of ${materialName}. Please proceed with purchase.${approvalComment}`,
         req.user?.id || '',
         req.user?.name || '',
         'PROCUREMENT',
@@ -522,7 +528,7 @@ router.put('/requests/:id', authenticateToken, async (req: AuthRequest, res) => 
         await createNotification(
           'MATERIAL_REQUEST_PURCHASED',
           'Material Request Approved',
-          `Your request for ${quantity} ${unit} of ${materialName} has been approved by the COO! Procurement will proceed with the purchase.`,
+          `Your request for ${quantity} ${unit} of ${materialName} has been approved by the COO! Procurement will proceed with the purchase.${approvalComment}`,
           req.user?.id || '',
           req.user?.name || '',
           undefined,
